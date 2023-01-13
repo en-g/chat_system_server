@@ -18,11 +18,7 @@ export class HttpResponseInterceptor implements NestInterceptor {
       map((data) => ({
         status: res.statusCode,
         statusText: 'OK',
-        data: {
-          code: 200,
-          message: '请求成功',
-          data,
-        },
+        data,
       })),
     )
   }

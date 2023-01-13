@@ -9,11 +9,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest()
 
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
-    const message = exception.message || 'SERVER ERROR'
+    const statusText = exception.message || 'SERVER ERROR'
 
-    response.status(status).json({
-      code: status,
-      message,
+    response.status(HttpStatus.OK).json({
+      status,
+      statusText,
       timestamp: new Date().toISOString(),
       path: request.url,
     })
