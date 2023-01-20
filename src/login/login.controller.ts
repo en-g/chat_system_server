@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Query, Request, UseGuards, Put, Body } from '@nestjs/common'
 import { AuthService } from '../auth/auth.service'
 import { LocalAuthGuard } from '../auth/local-auth.guard'
-import { LoginInfo, PassInfo } from './dto/login.dto'
+import { LoginInfo, PassInfo, RegisterInfo } from './dto/login.dto'
 import { LoginService } from './login.service'
 
 @Controller('login')
@@ -24,5 +24,11 @@ export class LoginController {
   @Put('update')
   async updatePassword(@Body() passInfo: PassInfo) {
     return await this.loginService.updatePassword(passInfo)
+  }
+
+  // 用户注册
+  @Post('register')
+  async userRegister(@Body() registerInfo: RegisterInfo) {
+    return await this.loginService.userRegister(registerInfo)
   }
 }

@@ -27,3 +27,21 @@ export class PassInfo {
   @IsString()
   verificationCode: string
 }
+
+export class RegisterInfo {
+  @IsNotEmpty()
+  @IsString()
+  email: string
+
+  @IsNotEmpty()
+  @IsString()
+  username: string
+
+  @IsNotEmpty()
+  @IsString()
+  password: string
+
+  @IsOptional()
+  @IsString()
+  verificationCode: string
+}
