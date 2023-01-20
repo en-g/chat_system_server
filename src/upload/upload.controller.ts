@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileExist, FileInfo, FileMergeInfo } from './dto/upload.dto'
 import { UploadService } from './upload.service'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
