@@ -4,7 +4,6 @@ import { resolve } from 'path'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { FileExist, FileInfo, FileMergeInfo } from './interface/upload.interface'
-import { LOCALHOST } from './config/index'
 
 @Injectable()
 export class UploadService {
@@ -24,7 +23,7 @@ export class UploadService {
         fileInfo: actualFileSelectRes[0],
       }
     }
-    const temporaryFileSelectRes: any = await this.sequelize.query(temporaryFileSelect, {
+    const temporaryFileSelectRes = await this.sequelize.query(temporaryFileSelect, {
       replacements: { ...info },
       type: QueryTypes.SELECT,
     })
@@ -62,7 +61,7 @@ export class UploadService {
       const filename = `${info.model}/${
         info.fileHash + temporaryFileSelectRes[0].size + temporaryFileSelectRes[0].suffix
       }`
-      const url = `${LOCALHOST}public/${filename}`
+      const url = `${process.env.LOCALHOST}public/${filename}`
       // 临时文件合并
       temporaryFileSelectRes.forEach((temporaryFile) => {
         const readStream = createReadStream(resolve(process.cwd(), `public/temporary/${temporaryFile.fileName}`))

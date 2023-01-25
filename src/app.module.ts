@@ -8,11 +8,25 @@ import { UsersModule } from './users/users.module'
 import { LoginModule } from './login/login.module'
 import { UploadModule } from './upload/upload.module'
 import { EmailModule } from './email/email.module'
+import { FileModule } from './file/file.module'
+
+// 通用环境变量
+const envFilePath = ['.env']
+if (process.env.NODE_ENV === 'development') {
+  // 开发环境变量
+  envFilePath.unshift('.env.dev')
+} else {
+  // 生产环境变量
+  envFilePath.unshift('.env.prod')
+}
 
 @Module({
   imports: [
     // 导入 env 环境变量
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath,
+    }),
     // 连接数据库
     SequelizeModule.forRoot({
       dialect: 'mysql',
@@ -27,6 +41,7 @@ import { EmailModule } from './email/email.module'
     LoginModule,
     UploadModule,
     EmailModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
