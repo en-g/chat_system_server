@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { LoginInfo, PassInfo, RegisterInfo } from './interface/login.interface'
+import {
+  LoginInfo,
+  PassInfo,
+  RegisterInfo,
+  RegisterUserInfo,
+  RegisterUserRandomInfo,
+} from './interface/login.interface'
 
 @Injectable()
 export class LoginService {
@@ -119,5 +125,67 @@ export class LoginService {
         status: 0,
       }
     }
+  }
+
+  async getRegisterAvatarList() {
+    const avatarListSelect = `SELECT id, url FROM files WHERE url LIKE '%defaultAvatar%'`
+    const result = await this.sequelize.query(avatarListSelect, {
+      type: QueryTypes.SELECT,
+    })
+    return result
+  }
+
+  async writeUserRegisterInfo(info: RegisterUserInfo) {
+    const userInfoInsert = `INSERT INTO userInfo (user_id, nickname, avatar_url, sex, birthday) VALUES (:userId, :nickname, :avatarUrl, :sex, :birthday)`
+    const userInfoDelete = `DELETE FROM users WHERE id = :userId`
+    const result = await this.sequelize.query(userInfoInsert, {
+      replacements: {
+        ...info,
+      },
+      type: QueryTypes.INSERT,
+    })
+    // 用户信息上传失败，删除该账号
+    if (!result[1]) {
+      await this.sequelize.query(userInfoDelete, {
+        replacements: {
+          userId: info.userId,
+        },
+        type: QueryTypes.DELETE,
+      })
+      return !result[1]
+    }
+    return !!result[1]
+  }
+
+  async randomUserRegisterInfo(id: RegisterUserRandomInfo) {
+    const avatarList: any = await this.getRegisterAvatarList()
+    const avatarUrl = avatarList[Math.floor(Math.random() * avatarList.length)].url
+    const nickname = `用户${Math.floor(Math.random() * 99999999)}`
+    const info: RegisterUserInfo = {
+      userId: id.userId,
+      avatarUrl,
+      nickname,
+      sex: '男',
+      birthday: new Date(),
+    }
+    const userInfoInsert = `INSERT INTO userInfo (user_id, nickname, avatar_url, sex, birthday) VALUES (:userId, :nickname, :avatarUrl, :sex, :birthday)`
+    const userInfoDelete = `DELETE FROM users WHERE id = :userId`
+    const result = await this.sequelize.query(userInfoInsert, {
+      replacements: {
+        ...info,
+      },
+      type: QueryTypes.INSERT,
+    })
+    // 用户信息上传失败，删除该账号
+    if (!result[1]) {
+      await this.sequelize.query(userInfoDelete, {
+        replacements: {
+          userId: id.userId,
+        },
+        type: QueryTypes.DELETE,
+      })
+      return !result[1]
+    }
+    return !!result[1]
   }
 }

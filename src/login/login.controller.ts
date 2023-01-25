@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Query, Request, UseGuards, Put, Body } from '@nestjs/common'
 import { AuthService } from '../auth/auth.service'
 import { LocalAuthGuard } from '../auth/local-auth.guard'
-import { LoginInfo, PassInfo, RegisterInfo } from './dto/login.dto'
+import { LoginInfo, PassInfo, RegisterInfo, RegisterUserInfo, RegisterUserRandomInfo } from './dto/login.dto'
 import { LoginService } from './login.service'
 
 @Controller('login')
@@ -30,5 +30,23 @@ export class LoginController {
   @Post('register')
   async userRegister(@Body() registerInfo: RegisterInfo) {
     return await this.loginService.userRegister(registerInfo)
+  }
+
+  // 获取注册默认头像列表
+  @Get('register/avatar/list')
+  async getRegisterAvatarList() {
+    return await this.loginService.getRegisterAvatarList()
+  }
+
+  // 填写注册用户的个人信息
+  @Post('register/info')
+  async writeUserRegisterInfo(@Body() info: RegisterUserInfo) {
+    return await this.loginService.writeUserRegisterInfo(info)
+  }
+
+  // 随机生成注册用户的个人信息
+  @Post('register/random/info')
+  async randomUserRegisterInfo(@Body() id: RegisterUserRandomInfo) {
+    return await this.loginService.randomUserRegisterInfo(id)
   }
 }

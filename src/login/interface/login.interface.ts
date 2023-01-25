@@ -16,3 +16,15 @@ export interface RegisterInfo {
   password: string
   verificationCode?: string
 }
+
+export interface RegisterUserInfo {
+  userId: number
+  nickname: string
+  avatarUrl: string
+  sex: string
+  birthday: Date
+}
+
+export interface RegisterUserRandomInfo {
+  userId: number
+}
