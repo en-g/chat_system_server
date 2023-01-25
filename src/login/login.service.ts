@@ -17,18 +17,48 @@ export class LoginService {
   }
 
   async updatePassword(passInfo: PassInfo) {
+    const verificationCodeSelect = `SELECT * FROM verificationCode WHERE email = :email AND code = :code`
     const passwordUpdate = `UPDATE users SET password = :newPass WHERE email = :email AND username = :username`
-    const result = await this.sequelize.query(passwordUpdate, {
+    const verificationCodeDelete = `DELETE FROM verificationCode WHERE email = :email`
+    const verificationCodeSelectRes: any = await this.sequelize.query(verificationCodeSelect, {
+      replacements: {
+        email: passInfo.email,
+        code: passInfo.verificationCode,
+      },
+      type: QueryTypes.SELECT,
+    })
+    if (!verificationCodeSelectRes.length) {
+      // 验证码错误
+      return {
+        status: 2,
+      }
+    }
+    const Interval = new Date().getTime() - verificationCodeSelectRes[0].createAt.getTime()
+    if (Interval > 5 * 60 * 1000) {
+      // 验证码已过期
+      return {
+        status: 3,
+      }
+    }
+    const passwordUpdateRes = await this.sequelize.query(passwordUpdate, {
       replacements: { ...passInfo },
       type: QueryTypes.UPDATE,
     })
-    return !!result[1]
+    await this.sequelize.query(verificationCodeDelete, {
+      replacements: { ...passInfo },
+      type: QueryTypes.DELETE,
+    })
+    return {
+      status: passwordUpdateRes[1],
+    }
   }
 
   async userRegister(registerInfo: RegisterInfo) {
     const emailSelect = `SELECT * FROM users WHERE email = :email`
     const usernameSelect = `SELECT * FROM users WHERE username = :username`
+    const verificationCodeSelect = `SELECT * FROM verificationCode WHERE email = :email AND code = :code`
     const usersInsert = `INSERT INTO users (username, password, email) VALUES (:username, :password, :email)`
+    const verificationCodeDelete = `DELETE FROM verificationCode WHERE email = :email`
     const emailSelectRes = await this.sequelize.query(emailSelect, {
       replacements: { ...registerInfo },
       type: QueryTypes.SELECT,
@@ -36,7 +66,7 @@ export class LoginService {
     // 邮箱重复
     if (emailSelectRes.length > 0) {
       return {
-        type: 1,
+        status: 2,
       }
     }
     const usernameSelectRes = await this.sequelize.query(usernameSelect, {
@@ -46,23 +76,47 @@ export class LoginService {
     // 用户名重复
     if (usernameSelectRes.length > 0) {
       return {
-        type: 2,
+        status: 3,
+      }
+    }
+    const verificationCodeSelectRes: any = await this.sequelize.query(verificationCodeSelect, {
+      replacements: {
+        email: registerInfo.email,
+        code: registerInfo.verificationCode,
+      },
+      type: QueryTypes.SELECT,
+    })
+    if (!verificationCodeSelectRes.length) {
+      // 验证码错误
+      return {
+        status: 4,
+      }
+    }
+    const Interval = new Date().getTime() - verificationCodeSelectRes[0].createAt.getTime()
+    if (Interval > 5 * 60 * 1000) {
+      // 验证码已过期
+      return {
+        status: 5,
       }
     }
     const usersInsertRes = await this.sequelize.query(usersInsert, {
       replacements: { ...registerInfo },
       type: QueryTypes.INSERT,
     })
+    await this.sequelize.query(verificationCodeDelete, {
+      replacements: { ...registerInfo },
+      type: QueryTypes.DELETE,
+    })
     if (!!usersInsertRes[1]) {
       // 注册成功
       return {
-        type: 0,
+        status: 1,
         id: usersInsertRes[0],
       }
     } else {
       // 注册失败
       return {
-        type: 3,
+        status: 0,
       }
     }
   }
