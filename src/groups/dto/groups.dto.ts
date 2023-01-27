@@ -5,3 +5,13 @@ export class GroupsListId {
   @IsNumberString()
   userId: string
 }
+
+export class GroupInfoIds {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  groupId: string
+}

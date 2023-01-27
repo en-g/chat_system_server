@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { GroupsListId } from './interface/groups.interface'
+import { GroupInfoIds, GroupsListId } from './interface/groups.interface'
 
 @Injectable()
 export class GroupsService {
@@ -50,5 +50,30 @@ export class GroupsService {
         },
       ]
     }
+  }
+
+  async getGroupInfo(ids: GroupInfoIds) {
+    const groupInfoSelect = `
+      SELECT 
+        cg.id, 
+        cg.number, 
+        cg.name, 
+        ui.nickname leader,
+        ug.remarks,
+        cg.avatar_url avatarUrl,
+        cg.notice,
+        cg.createAt createTime,
+        cg.leader_id = :userId isLeader
+      FROM chatGroups cg
+      INNER JOIN user_group ug ON ug.group_id = cg.id AND ug.group_id = :groupId AND ug.user_id = :userId
+      INNER JOIN userInfo ui ON ui.user_id = cg.leader_id
+    `
+    const result = await this.sequelize.query(groupInfoSelect, {
+      replacements: {
+        ...ids,
+      },
+      type: QueryTypes.SELECT,
+    })
+    return result.length === 0 ? null : result[0]
   }
 }

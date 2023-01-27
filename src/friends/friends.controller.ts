@@ -1,6 +1,6 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { FriendListId } from './dto/friends.dto'
+import { FriendInfoIds, FriendListId } from './dto/friends.dto'
 import { FriendsService } from './friends.service'
 
 @UseGuards(AuthGuard('jwt'))
@@ -12,5 +12,11 @@ export class FriendsController {
   @Get('list/:userId')
   async getFriendList(@Param() userId: FriendListId) {
     return await this.friendsService.getFriendList(userId)
+  }
+
+  // 获取联系人信息
+  @Get('info')
+  async getFriendInfo(@Query() ids: FriendInfoIds) {
+    return this.friendsService.getFriendInfo(ids)
   }
 }

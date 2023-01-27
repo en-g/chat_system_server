@@ -5,3 +5,13 @@ export class FriendListId {
   @IsNumberString()
   userId: string
 }
+
+export class FriendInfoIds {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  friendId: string
+}

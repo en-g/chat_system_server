@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { FriendListId } from './interface/friends.interface'
+import { FriendInfoIds, FriendListId } from './interface/friends.interface'
 
 @Injectable()
 export class FriendsService {
@@ -53,5 +53,32 @@ export class FriendsService {
       type: QueryTypes.SELECT,
     })
     return result
+  }
+
+  async getFriendInfo(ids: FriendInfoIds) {
+    const friendInfoSelect = `
+      SELECT 
+        f.friend_id id, 
+        ui.nickname, 
+        f.remarks, 
+        ui.avatar_url avatarUrl, 
+        ui.sex, 
+        ui.signature, 
+        ui.birthday, 
+        u.email, 
+        u.username,
+        f.disturb
+      FROM friends f
+      INNER JOIN userInfo ui ON ui.user_id = f.friend_id
+      INNER JOIN users u ON u.id = f.friend_id
+      WHERE f.user_id = :userId AND f.friend_id = :friendId
+    `
+    const result = await this.sequelize.query(friendInfoSelect, {
+      replacements: {
+        ...ids,
+      },
+      type: QueryTypes.SELECT,
+    })
+    return result.length === 0 ? null : result[0]
   }
 }
