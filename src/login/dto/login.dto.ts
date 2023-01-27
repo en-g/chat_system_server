@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber, IsDate } from 'class-validator'
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsDateString, IsDate } from 'class-validator'
 
 export class LoginInfo {
   @IsNotEmpty()
@@ -64,8 +64,8 @@ export class RegisterUserInfo {
   sex: string
 
   @IsNotEmpty()
-  @IsDate()
-  birthday: Date
+  @IsString()
+  birthday: string
 }
 
 export class RegisterUserRandomInfo {

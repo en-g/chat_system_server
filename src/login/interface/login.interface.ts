@@ -22,7 +22,7 @@ export interface RegisterUserInfo {
   nickname: string
   avatarUrl: string
   sex: string
-  birthday: Date
+  birthday: string
 }
 
 export interface RegisterUserRandomInfo {

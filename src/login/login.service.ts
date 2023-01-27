@@ -166,7 +166,7 @@ export class LoginService {
       avatarUrl,
       nickname,
       sex: '男',
-      birthday: new Date(),
+      birthday: new Date().toLocaleDateString(),
     }
     const userInfoInsert = `INSERT INTO userInfo (user_id, nickname, avatar_url, sex, birthday) VALUES (:userId, :nickname, :avatarUrl, :sex, :birthday)`
     const userInfoDelete = `DELETE FROM users WHERE id = :userId`
