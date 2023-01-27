@@ -9,6 +9,8 @@ import { LoginModule } from './login/login.module'
 import { UploadModule } from './upload/upload.module'
 import { EmailModule } from './email/email.module'
 import { FileModule } from './file/file.module'
+import { FriendsModule } from './friends/friends.module';
+import { GroupsModule } from './groups/groups.module';
 
 // 通用环境变量
 const envFilePath = ['.env']
@@ -42,6 +44,8 @@ if (process.env.NODE_ENV === 'development') {
     UploadModule,
     EmailModule,
     FileModule,
+    FriendsModule,
+    GroupsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
