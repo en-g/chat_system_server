@@ -62,11 +62,27 @@ export class GroupsService {
         ug.remarks,
         cg.avatar_url avatarUrl,
         cg.notice,
+        ug.disturb,
         cg.createAt createTime,
-        cg.leader_id = :userId isLeader
+        cg.leader_id = 1 isLeader,
+        ugui.members
       FROM chatGroups cg
-      INNER JOIN user_group ug ON ug.group_id = cg.id AND ug.group_id = :groupId AND ug.user_id = :userId
+      INNER JOIN user_group ug ON ug.group_id = cg.id
       INNER JOIN userInfo ui ON ui.user_id = cg.leader_id
+      INNER JOIN (
+        SELECT ug.group_id, JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', ui.user_id, 
+            'nickname', ui.nickname, 
+            'avatarUrl', ui.avatar_url, 
+            'remarks', ug.remarks
+          )
+        ) members
+        FROM user_group ug
+        INNER JOIN userInfo ui ON ui.user_id = ug.user_id
+        GROUP BY ug.group_id
+      ) ugui ON ugui.group_id = cg.id
+      WHERE ug.group_id = :groupId AND ug.user_id = :userId
     `
     const result = await this.sequelize.query(groupInfoSelect, {
       replacements: {
