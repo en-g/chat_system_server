@@ -1,6 +1,6 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { GroupInfoIds, GroupsListId } from './dto/groups.dto'
+import { GroupInfoIds, GroupsListId, UpdateGroupRemarksInfo } from './dto/groups.dto'
 import { GroupsService } from './groups.service'
 
 @UseGuards(AuthGuard('jwt'))
@@ -18,5 +18,11 @@ export class GroupsController {
   @Get('info')
   async getGroupInfo(@Query() ids: GroupInfoIds) {
     return this.groupsService.getGroupInfo(ids)
+  }
+
+  // 修改用户的群聊群昵称
+  @Put('remarks')
+  async updateGroupRemarks(@Body() info: UpdateGroupRemarksInfo) {
+    return await this.groupsService.updateGroupRemarks(info)
   }
 }

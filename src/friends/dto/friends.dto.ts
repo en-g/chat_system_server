@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumberString } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsNumberString, IsString } from 'class-validator'
 
 export class FriendListId {
   @IsNotEmpty()
@@ -14,4 +14,18 @@ export class FriendInfoIds {
   @IsNotEmpty()
   @IsNumberString()
   friendId: string
+}
+
+export class UpdateFriendRemarksInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendId: number
+
+  @IsNotEmpty()
+  @IsString()
+  remarks: string
 }

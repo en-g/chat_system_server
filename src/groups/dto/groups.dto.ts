@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumberString } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsNumberString, IsString } from 'class-validator'
 
 export class GroupsListId {
   @IsNotEmpty()
@@ -14,4 +14,18 @@ export class GroupInfoIds {
   @IsNotEmpty()
   @IsNumberString()
   groupId: string
+}
+
+export class UpdateGroupRemarksInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  remarks: string
 }

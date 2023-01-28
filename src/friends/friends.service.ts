@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { FriendInfoIds, FriendListId } from './interface/friends.interface'
+import { FriendInfoIds, FriendListId, UpdateFriendRemarksInfo } from './interface/friends.interface'
 
 @Injectable()
 export class FriendsService {
@@ -80,5 +80,16 @@ export class FriendsService {
       type: QueryTypes.SELECT,
     })
     return result.length === 0 ? null : result[0]
+  }
+
+  async updateFriendRemarks(info: UpdateFriendRemarksInfo) {
+    const friendRemarksUpdate = `UPDATE friends SET remarks = :remarks WHERE user_id = :userId AND friend_id = :friendId`
+    const result = await this.sequelize.query(friendRemarksUpdate, {
+      replacements: {
+        ...info,
+      },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
   }
 }

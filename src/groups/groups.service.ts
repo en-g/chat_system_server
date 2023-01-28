@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { GroupInfoIds, GroupsListId } from './interface/groups.interface'
+import { GroupInfoIds, GroupsListId, UpdateGroupRemarksInfo } from './interface/groups.interface'
 
 @Injectable()
 export class GroupsService {
@@ -91,5 +91,16 @@ export class GroupsService {
       type: QueryTypes.SELECT,
     })
     return result.length === 0 ? null : result[0]
+  }
+
+  async updateGroupRemarks(info: UpdateGroupRemarksInfo) {
+    const groupRemarksUpdate = `UPDATE user_group SET remarks = :remarks WHERE user_id = :userId AND group_id = :groupId`
+    const result = await this.sequelize.query(groupRemarksUpdate, {
+      replacements: {
+        ...info,
+      },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
   }
 }
