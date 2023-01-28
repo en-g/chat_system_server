@@ -11,6 +11,7 @@ import { EmailModule } from './email/email.module'
 import { FileModule } from './file/file.module'
 import { FriendsModule } from './friends/friends.module';
 import { GroupsModule } from './groups/groups.module';
+import { FriendGroupsModule } from './friend-groups/friend-groups.module';
 
 // 通用环境变量
 const envFilePath = ['.env']
@@ -46,6 +47,7 @@ if (process.env.NODE_ENV === 'development') {
     FileModule,
     FriendsModule,
     GroupsModule,
+    FriendGroupsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
