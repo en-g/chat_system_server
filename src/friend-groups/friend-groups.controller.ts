@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { AddFriendGroup, DeleteFriendGroup, FriendGroupListId, UpdateFriendGroup } from './dto/friend-groups.dto'
 import { FriendGroupsService } from './friend-groups.service'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('friendGroups')
 export class FriendGroupsController {
   constructor(private readonly friendGroupsService: FriendGroupsService) {}
