@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { FriendPyqTidingsListId, PyqTidingsInfo, PyqTidingsListId } from './interface/pyq.interface'
+import {
+  FriendPyqTidingsListInfo,
+  PyqTidingsInfo,
+  PyqTidingsListId,
+  PyqTidingsListPage,
+} from './interface/pyq.interface'
 
 @Injectable()
 export class PyqService {
   constructor(private sequelize: Sequelize) {}
 
-  async getPyqTidingsList(id: PyqTidingsListId) {
+  async getPyqTidingsList(id: PyqTidingsListId, page: PyqTidingsListPage) {
     const pyqTidingsListSelect = `
       SELECT 
         pt.id, pt.user_id, ui.nickname, ui.avatar_url avatarUrl, pt.content, 
@@ -54,15 +59,22 @@ export class PyqService {
       WHERE pt.user_id = :userId OR pt.user_id IN (
         SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
       )
+      ORDER BY pt.createAt DESC
     `
     const result: any[] = await this.sequelize.query(pyqTidingsListSelect, {
       replacements: { ...id },
       type: QueryTypes.SELECT,
     })
-    return result.reverse()
+    return {
+      total: result.length,
+      list: result.slice(
+        (parseInt(page.pageNum) - 1) * parseInt(page.pageSize),
+        (parseInt(page.pageNum) - 1) * parseInt(page.pageSize) + parseInt(page.pageSize),
+      ),
+    }
   }
 
-  async getFriendPyqTidingsList(id: FriendPyqTidingsListId) {
+  async getFriendPyqTidingsList(info: FriendPyqTidingsListInfo) {
     const friendPyqTidingsListSelect = `
       SELECT 
         pt.id, pt.user_id, ui.nickname, ui.avatar_url avatarUrl, pt.content, 
@@ -107,12 +119,19 @@ export class PyqService {
         GROUP BY ptt.pyqTidings_id
       ) pttui ON pttui.pyqTidings_id = pt.id
       WHERE pt.user_id = :contactId
+      ORDER BY pt.createAt DESC
     `
     const result = await this.sequelize.query(friendPyqTidingsListSelect, {
-      replacements: { ...id },
+      replacements: { ...info },
       type: QueryTypes.SELECT,
     })
-    return result.reverse()
+    return {
+      total: result.length,
+      list: result.slice(
+        (parseInt(info.pageNum) - 1) * parseInt(info.pageSize),
+        (parseInt(info.pageNum) - 1) * parseInt(info.pageSize) + parseInt(info.pageSize),
+      ),
+    }
   }
 
   async releasePyqTidings(info: PyqTidingsInfo) {

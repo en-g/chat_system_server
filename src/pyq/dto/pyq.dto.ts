@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsNumberString, IsString } from 'class-validator'
+import { IsArray, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString } from 'class-validator'
 
 export class PyqTidingsListId {
   @IsNotEmpty()
@@ -6,7 +6,17 @@ export class PyqTidingsListId {
   userId: string
 }
 
-export class FriendPyqTidingsListId {
+export class PyqTidingsListPage {
+  @IsNotEmpty()
+  @IsNumberString()
+  pageNum: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  pageSize: string
+}
+
+export class FriendPyqTidingsListInfo {
   @IsNotEmpty()
   @IsNumberString()
   userId: string
@@ -14,6 +24,14 @@ export class FriendPyqTidingsListId {
   @IsNotEmpty()
   @IsNumberString()
   contactId: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  pageNum: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  pageSize: string
 }
 
 export class PyqTidingsInfo {
