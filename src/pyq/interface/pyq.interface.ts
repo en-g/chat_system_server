@@ -15,7 +15,23 @@ export interface FriendPyqTidingsListInfo {
 }
 
 export interface PyqTidingsInfo {
-  userId: string
+  userId: number
   content: string
   pictureIds: Array<number>
+}
+
+export interface DeletePyqTidingsId {
+  pyqTidingId: number
+}
+
+export interface ThumbsUpPyqTidingsIds {
+  pyqTidingId: number
+  userId: number
+}
+
+export interface SendPyqTidingsCommentInfo {
+  pyqTidingId: number
+  userId: number
+  toId?: number
+  content: string
 }

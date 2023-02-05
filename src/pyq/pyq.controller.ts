@@ -1,5 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
-import { FriendPyqTidingsListInfo, PyqTidingsInfo, PyqTidingsListId, PyqTidingsListPage } from './dto/pyq.dto'
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common'
+import {
+  DeletePyqTidingsId,
+  FriendPyqTidingsListInfo,
+  PyqTidingsInfo,
+  PyqTidingsListId,
+  PyqTidingsListPage,
+  SendPyqTidingsCommentInfo,
+  ThumbsUpPyqTidingsIds,
+} from './dto/pyq.dto'
 import { PyqService } from './pyq.service'
 
 @Controller('pyq')
@@ -22,5 +30,29 @@ export class PyqController {
   @Post()
   async releasePyqTidings(@Body() info: PyqTidingsInfo) {
     return await this.pyqService.releasePyqTidings(info)
+  }
+
+  // 删除动态
+  @Delete()
+  async deletePyqTiding(@Body() id: DeletePyqTidingsId) {
+    return await this.pyqService.deletePyqTiding(id)
+  }
+
+  // 点赞动态
+  @Post('thumbs')
+  async thumsUpTiding(@Body() ids: ThumbsUpPyqTidingsIds) {
+    return await this.pyqService.thumsUpTiding(ids)
+  }
+
+  // 取消点赞动态
+  @Delete('thumbs')
+  async cancleThumsUpTiding(@Body() ids: ThumbsUpPyqTidingsIds) {
+    return await this.pyqService.cancleThumsUpTiding(ids)
+  }
+
+  // 发送评论
+  @Post('comment')
+  async sendTidingComment(@Body() info: SendPyqTidingsCommentInfo) {
+    return await this.pyqService.sendTidingComment(info)
   }
 }

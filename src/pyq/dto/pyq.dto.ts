@@ -37,7 +37,7 @@ export class FriendPyqTidingsListInfo {
 export class PyqTidingsInfo {
   @IsNotEmpty()
   @IsNumber()
-  userId: string
+  userId: number
 
   @IsNotEmpty()
   @IsString()
@@ -46,4 +46,38 @@ export class PyqTidingsInfo {
   @IsNotEmpty()
   @IsArray()
   pictureIds: Array<number>
+}
+
+export class DeletePyqTidingsId {
+  @IsNotEmpty()
+  @IsNumber()
+  pyqTidingId: number
+}
+
+export class ThumbsUpPyqTidingsIds {
+  @IsNotEmpty()
+  @IsNumber()
+  pyqTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class SendPyqTidingsCommentInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  pyqTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsOptional()
+  @IsNumber()
+  toId: number
+
+  @IsNotEmpty()
+  @IsString()
+  content: string
 }
