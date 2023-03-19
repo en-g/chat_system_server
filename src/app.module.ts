@@ -9,10 +9,11 @@ import { LoginModule } from './login/login.module'
 import { UploadModule } from './upload/upload.module'
 import { EmailModule } from './email/email.module'
 import { FileModule } from './file/file.module'
-import { FriendsModule } from './friends/friends.module';
-import { GroupsModule } from './groups/groups.module';
-import { FriendGroupsModule } from './friend-groups/friend-groups.module';
-import { PyqModule } from './pyq/pyq.module';
+import { FriendsModule } from './friends/friends.module'
+import { GroupsModule } from './groups/groups.module'
+import { FriendGroupsModule } from './friend-groups/friend-groups.module'
+import { PyqModule } from './pyq/pyq.module'
+import { WebsocketModule } from './websocket/websocket.module'
 
 // 通用环境变量
 const envFilePath = ['.env']
@@ -50,6 +51,7 @@ if (process.env.NODE_ENV === 'development') {
     GroupsModule,
     FriendGroupsModule,
     PyqModule,
+    WebsocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

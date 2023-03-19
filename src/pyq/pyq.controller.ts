@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import {
   DeletePyqTidingsId,
   FriendPyqTidingsListInfo,
@@ -10,6 +11,7 @@ import {
 } from './dto/pyq.dto'
 import { PyqService } from './pyq.service'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('pyq')
 export class PyqController {
   constructor(private readonly pyqService: PyqService) {}
