@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { FriendInfoIds, FriendListId, UpdateFriendRemarksInfo } from './interface/friends.interface'
+import {
+  FriendInfoIds,
+  FriendListId,
+  SearchFriendAndGroupsByKeyword,
+  UpdateFriendRemarksInfo,
+} from './interface/friends.interface'
 
 @Injectable()
 export class FriendsService {
@@ -91,5 +96,52 @@ export class FriendsService {
       type: QueryTypes.UPDATE,
     })
     return !!result[1]
+  }
+
+  async searchFriendsAndGroups(info: SearchFriendAndGroupsByKeyword) {
+    const contactSelect = `
+      SELECT u.id userId, u.username, ui.nickname name, ui.signature, ui.avatar_url avatarUrl, IFNULL(ff.isAdd, 0) isAdd
+      FROM users u
+      INNER JOIN userInfo ui ON ui.user_id = u.id
+      LEFT JOIN (
+        SELECT f.user_id, JSON_CONTAINS(JSON_ARRAYAGG(f.friend_id), JSON_ARRAY(:userId + 0)) isAdd
+        FROM friends f
+        GROUP BY f.user_id
+      ) ff ON ff.user_id = u.id
+      WHERE u.id != :userId AND (u.username = :keyword OR ui.nickname LIKE CONCAT('%', :keyword, '%'))
+    `
+    const groupSelect = `
+      SELECT cg.id groupId, cg.number, cg.name, cg.avatar_url avatarUrl, ugg.isAdd
+      FROM chatGroups cg
+      INNER JOIN (
+        SELECT ug.group_id, JSON_CONTAINS(JSON_ARRAYAGG(ug.user_id), JSON_ARRAY(:userId + 0)) isAdd
+        FROM user_group ug
+        GROUP BY ug.group_id
+      ) ugg ON ugg.group_id = cg.id
+      WHERE cg.number = :keyword OR cg.name LIKE CONCAT('%', :keyword, '%')
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const contactSelectRes = await this.sequelize.query(contactSelect, {
+        replacements: { ...info },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const groupSelectRes = await this.sequelize.query(groupSelect, {
+        replacements: { ...info },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      contactSelectRes.push(...groupSelectRes)
+      contactSelectRes.forEach((item: any, index: number) => {
+        item['id'] = index + 1
+        if (item.groupId) {
+          item['isGroup'] = 1
+        } else {
+          item['isGroup'] = 0
+        }
+      })
+      return contactSelectRes
+    })
+    return result
   }
 }

@@ -29,3 +29,11 @@ export class UpdateFriendRemarksInfo {
   @IsString()
   remarks: string
 }
+
+export class SearchFriendAndGroupsByKeyword {
+  @IsString()
+  keyword: string
+
+  @IsNumberString()
+  userId: string
+}

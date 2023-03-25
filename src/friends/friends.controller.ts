@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { FriendInfoIds, FriendListId, UpdateFriendRemarksInfo } from './dto/friends.dto'
+import { FriendInfoIds, FriendListId, SearchFriendAndGroupsByKeyword, UpdateFriendRemarksInfo } from './dto/friends.dto'
 import { FriendsService } from './friends.service'
 
 @UseGuards(AuthGuard('jwt'))
@@ -24,5 +24,11 @@ export class FriendsController {
   @Put('remarks')
   async updateFriendRemarks(@Body() info: UpdateFriendRemarksInfo) {
     return await this.friendsService.updateFriendRemarks(info)
+  }
+
+  // 搜索联系人/群聊，写在一起
+  @Get('groups/search')
+  async searchFriendsAndGroups(@Query() info: SearchFriendAndGroupsByKeyword) {
+    return this.friendsService.searchFriendsAndGroups(info)
   }
 }

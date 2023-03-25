@@ -12,3 +12,8 @@ export interface UpdateFriendRemarksInfo {
   friendId: number
   remarks: string
 }
+
+export interface SearchFriendAndGroupsByKeyword {
+  keyword: string
+  userId: string
+}
