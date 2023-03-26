@@ -111,7 +111,7 @@ export class FriendsService {
       WHERE u.id != :userId AND (u.username = :keyword OR ui.nickname LIKE CONCAT('%', :keyword, '%'))
     `
     const groupSelect = `
-      SELECT cg.id groupId, cg.number, cg.name, cg.avatar_url avatarUrl, ugg.isAdd
+      SELECT cg.id groupId, cg.leader_id leaderId, cg.number, cg.name, cg.avatar_url avatarUrl, ugg.isAdd
       FROM chatGroups cg
       INNER JOIN (
         SELECT ug.group_id, JSON_CONTAINS(JSON_ARRAYAGG(ug.user_id), JSON_ARRAY(:userId + 0)) isAdd

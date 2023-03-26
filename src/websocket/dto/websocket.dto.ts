@@ -1,17 +1,56 @@
-import { IsNumber } from 'class-validator'
-import { Socket } from 'net'
+import { IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class Clients {
-  [key: number]: ClientsItem
+  [key: number]: ClientItem
 }
 
-export class ClientsItem {
-  socketId: string
-  socket: Socket
+export class ClientItem {
+  userId: number
+  socket: any
   isConnect: boolean
 }
 
 export class ClientId {
   @IsNumber()
   userId: number
+}
+
+export class AddContactApplication {
+  @IsNumber()
+  fromId: number
+
+  @IsNumber()
+  toId: number
+
+  @IsString()
+  type: string
+
+  @IsOptional()
+  @IsString()
+  message?: string
+
+  @IsNumber()
+  friendGroupId: number
+
+  @IsOptional()
+  @IsString()
+  remarks?: string
+}
+
+export class AddGroupApplication {
+  @IsNumber()
+  fromId: number
+
+  @IsNumber()
+  toId: number
+
+  @IsNumber()
+  groupId: number
+
+  @IsString()
+  type: string
+
+  @IsOptional()
+  @IsString()
+  message?: string
 }

@@ -1,27 +1,59 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
-import { ClientId, Clients } from './dto/websocket.dto'
+import { AddContactApplication, AddGroupApplication, ClientId, ClientItem, Clients } from './dto/websocket.dto'
+import { WebsocketService } from './websocket.service'
 
 @WebSocketGateway(3002, { cors: true })
 export class WebsocketGateway {
   clients: Clients = {}
   heartbeatTimer: any = null
+  constructor(private readonly websocketService: WebsocketService) {}
 
   // 客户端连接
   @SubscribeMessage('connection')
   onClientConnect(@ConnectedSocket() client: any, @MessageBody() id: ClientId) {
-    this.clients[id.userId] = {
-      socketId: client.id,
+    this.clients[client.id] = {
+      userId: id.userId,
       socket: client,
       isConnect: true,
     }
 
     // 客户端断开连接
     client.on('disconnect', () => {
-      this.clients[id.userId].socket = null
+      Reflect.deleteProperty(this.clients, client.id)
       console.log(`${id.userId} ${client.id} 断开连接！`)
     })
 
     // this.heartbeatToClient()
+  }
+
+  // 添加联系人
+  @SubscribeMessage('addContact')
+  async onAddContact(@MessageBody() info: AddContactApplication) {
+    const res = await this.websocketService.setContactNotice(info)
+    if (!!res[1]) {
+      for (const clientId of Object.keys(this.clients)) {
+        if (this.clients[clientId].userId === info.toId) {
+          const detail = await this.websocketService.getContactNoticeDetail(res[0])
+          this.clients[clientId].socket.emit('addContactNotice', detail)
+          break
+        }
+      }
+    }
+  }
+
+  // 添加联系人
+  @SubscribeMessage('addGroup')
+  async onAddGroup(@MessageBody() info: AddGroupApplication) {
+    const res = await this.websocketService.setGroupNotice(info)
+    if (!!res[1]) {
+      for (const clientId of Object.keys(this.clients)) {
+        if (this.clients[clientId].userId === info.toId) {
+          const detail = await this.websocketService.getGroupNoticeDetail(res[0])
+          this.clients[clientId].socket.emit('addGroupNotice', detail)
+          break
+        }
+      }
+    }
   }
 
   // 回应客户端的连接确认
@@ -33,9 +65,9 @@ export class WebsocketGateway {
   // 回应客户端的连接确认
   @SubscribeMessage('clientCheck')
   onClientCheck(@ConnectedSocket() client: any) {
-    Object.keys(this.clients).forEach((userId: string) => {
-      if (this.clients[userId] && this.clients[userId].socketId === client.id) {
-        this.clients[userId].isConnect = true
+    Object.keys(this.clients).forEach((clientId: string) => {
+      if (this.clients[clientId] && clientId === client.id) {
+        this.clients[clientId].isConnect = true
       }
     })
   }
