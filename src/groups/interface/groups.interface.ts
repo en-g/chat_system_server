@@ -7,8 +7,16 @@ export interface GroupInfoIds {
   groupId: string
 }
 
-export class UpdateGroupRemarksInfo {
+export interface UpdateGroupRemarksInfo {
   userId: number
   groupId: number
   remarks: string
+}
+
+export interface AgreeAddGropId {
+  noticeId: number
+}
+
+export interface RefuseAddGropId {
+  noticeId: number
 }

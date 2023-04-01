@@ -1,6 +1,13 @@
-import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { FriendInfoIds, FriendListId, SearchFriendAndGroupsByKeyword, UpdateFriendRemarksInfo } from './dto/friends.dto'
+import {
+  AgreeAddContactInfo,
+  FriendInfoIds,
+  FriendListId,
+  RefuseAddContactInfo,
+  SearchFriendAndGroupsByKeyword,
+  UpdateFriendRemarksInfo,
+} from './dto/friends.dto'
 import { FriendsService } from './friends.service'
 
 @UseGuards(AuthGuard('jwt'))
@@ -30,5 +37,17 @@ export class FriendsController {
   @Get('groups/search')
   async searchFriendsAndGroups(@Query() info: SearchFriendAndGroupsByKeyword) {
     return this.friendsService.searchFriendsAndGroups(info)
+  }
+
+  // 同意添加联系人
+  @Post('agree')
+  async agreeAddContact(@Body() info: AgreeAddContactInfo) {
+    return await this.friendsService.agreeAddContact(info)
+  }
+
+  // 拒绝添加联系人
+  @Put('refuse')
+  async refuseAddContact(@Body() id: RefuseAddContactInfo) {
+    return await this.friendsService.refuseAddContact(id)
   }
 }

@@ -31,9 +31,31 @@ export class UpdateFriendRemarksInfo {
 }
 
 export class SearchFriendAndGroupsByKeyword {
+  @IsNotEmpty()
   @IsString()
   keyword: string
 
+  @IsNotEmpty()
   @IsNumberString()
   userId: string
+}
+
+export class AgreeAddContactInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  noticeId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendGroupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  remarks: string
+}
+
+export class RefuseAddContactInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  noticeId: number
 }

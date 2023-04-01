@@ -14,6 +14,7 @@ import { GroupsModule } from './groups/groups.module'
 import { FriendGroupsModule } from './friend-groups/friend-groups.module'
 import { PyqModule } from './pyq/pyq.module'
 import { WebsocketModule } from './websocket/websocket.module'
+import { NoticeModule } from './notice/notice.module';
 
 // 通用环境变量
 const envFilePath = ['.env']
@@ -53,6 +54,7 @@ if (process.env.NODE_ENV === 'development') {
     FriendGroupsModule,
     PyqModule,
     WebsocketModule,
+    NoticeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

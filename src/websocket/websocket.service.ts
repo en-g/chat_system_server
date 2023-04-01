@@ -33,7 +33,7 @@ export class WebsocketService {
       SELECT 
         fn.id, fn.from_id fromId, ui.nickname fromName, ui.avatar_url fromAvatarUrl, ui.signature fromSignature,
         fn.to_id toId, uii.nickname toName, uii.avatar_url toAvatarUrl, uii.signature toSignature, fn.type, 
-        fn.message, fn.friendGroup_id friendGroupId, fn.remarks, fn.status, fn.createAt createTime
+        fn.message, fn.status, fn.createAt createTime
       FROM friendNotices fn
       INNER JOIN userInfo ui ON ui.user_id = fn.from_id
       INNER JOIN userInfo uii ON uii.user_id = fn.to_id

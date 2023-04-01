@@ -29,3 +29,15 @@ export class UpdateGroupRemarksInfo {
   @IsString()
   remarks: string
 }
+
+export class AgreeAddGropId {
+  @IsNotEmpty()
+  @IsNumber()
+  noticeId: number
+}
+
+export class RefuseAddGropId {
+  @IsNotEmpty()
+  @IsNumber()
+  noticeId: number
+}

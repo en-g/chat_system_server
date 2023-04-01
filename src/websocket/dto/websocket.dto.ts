@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class Clients {
   [key: number]: ClientItem
@@ -11,17 +11,21 @@ export class ClientItem {
 }
 
 export class ClientId {
+  @IsNotEmpty()
   @IsNumber()
   userId: number
 }
 
 export class AddContactApplication {
+  @IsNotEmpty()
   @IsNumber()
   fromId: number
 
+  @IsNotEmpty()
   @IsNumber()
   toId: number
 
+  @IsNotEmpty()
   @IsString()
   type: string
 
@@ -29,6 +33,7 @@ export class AddContactApplication {
   @IsString()
   message?: string
 
+  @IsNotEmpty()
   @IsNumber()
   friendGroupId: number
 
@@ -38,19 +43,35 @@ export class AddContactApplication {
 }
 
 export class AddGroupApplication {
+  @IsNotEmpty()
   @IsNumber()
   fromId: number
 
+  @IsNotEmpty()
   @IsNumber()
   toId: number
 
+  @IsNotEmpty()
   @IsNumber()
   groupId: number
 
+  @IsNotEmpty()
   @IsString()
   type: string
 
   @IsOptional()
   @IsString()
   message?: string
+}
+
+export class UpdateContactListId {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class UpdateGroupListId {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
 }

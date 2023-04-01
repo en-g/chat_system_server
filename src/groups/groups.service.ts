@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { GroupInfoIds, GroupsListId, UpdateGroupRemarksInfo } from './interface/groups.interface'
+import {
+  AgreeAddGropId,
+  GroupInfoIds,
+  GroupsListId,
+  RefuseAddGropId,
+  UpdateGroupRemarksInfo,
+} from './interface/groups.interface'
 
 @Injectable()
 export class GroupsService {
@@ -99,6 +105,63 @@ export class GroupsService {
       replacements: {
         ...info,
       },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
+  }
+
+  async agreeAddGroup(id: AgreeAddGropId) {
+    const noticeSelect = `
+      SELECT from_id fromId, to_id toId, group_id groupId, type
+      FROM groupNotices
+      WHERE id = :noticeId
+    `
+    const noticeUpdate = `UPDATE groupNotices SET status = 1 WHERE id = :noticeId`
+    const groupInsert = `INSERT INTO user_group (user_id, group_id) VALUES (:userId, :groupId)`
+    const chatMessageInsert = `INSERT INTO groupChatMessages (group_id, send_id, type, message) VALUES (:groupId, :userId, 1, '大家好，请多多指教！')`
+    const result = await this.sequelize.transaction(async (t) => {
+      const noticeSelectRes: any[] = await this.sequelize.query(noticeSelect, {
+        replacements: { noticeId: id.noticeId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      if (noticeSelectRes.length === 0) return false
+      let userId = -1
+      if (noticeSelectRes[0].type === 'add') {
+        userId = noticeSelectRes[0].fromId
+      } else if (noticeSelectRes[0].type === 'invite') {
+        userId = noticeSelectRes[0].toId
+      }
+      const noticeUpdateRes = await this.sequelize.query(noticeUpdate, {
+        replacements: { noticeId: id.noticeId },
+        type: QueryTypes.UPDATE,
+        transaction: t,
+      })
+      const groupInsertRes = await this.sequelize.query(groupInsert, {
+        replacements: {
+          userId,
+          groupId: noticeSelectRes[0].groupId,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      const ChatMessageInsert = await this.sequelize.query(chatMessageInsert, {
+        replacements: {
+          userId,
+          groupId: noticeSelectRes[0].groupId,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      return !!noticeUpdateRes[1] && !!groupInsertRes[1] && !!ChatMessageInsert[1]
+    })
+    return result
+  }
+
+  async refuseAddGroup(id: RefuseAddGropId) {
+    const noticeUpdate = `UPDATE groupNotices SET status = 2 WHERE id = :noticeId`
+    const result = await this.sequelize.query(noticeUpdate, {
+      replacements: { ...id },
       type: QueryTypes.UPDATE,
     })
     return !!result[1]

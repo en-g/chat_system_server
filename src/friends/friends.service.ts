@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
+  AgreeAddContactInfo,
   FriendInfoIds,
   FriendListId,
+  RefuseAddContactInfo,
   SearchFriendAndGroupsByKeyword,
   UpdateFriendRemarksInfo,
 } from './interface/friends.interface'
@@ -143,5 +145,82 @@ export class FriendsService {
       return contactSelectRes
     })
     return result
+  }
+
+  async agreeAddContact(info: AgreeAddContactInfo) {
+    const noticeSelect = `
+      SELECT from_id fromId, to_id toId, friendGroup_id friendGroupId, remarks
+      FROM friendNotices
+      WHERE id = :noticeId
+    `
+    const noticeUpdate = `UPDATE friendNotices SET status = 1 WHERE id = :noticeId`
+    const friendInsert = `INSERT INTO friends (user_id, friend_id, friendGroup_id, remarks) VALUES (:fromId, :toId, :friendGroupId, :remarks) `
+    const chatMessageInsert = `INSERT INTO friendChatMessages (from_id, to_id, type, message) VALUES (:fromId, :toId, 1, '我们已经是好友了，快来聊天吧！')`
+    const result = await this.sequelize.transaction(async (t) => {
+      const noticeSelectRes: any[] = await this.sequelize.query(noticeSelect, {
+        replacements: { noticeId: info.noticeId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      if (noticeSelectRes.length === 0) return false
+      const noticeUpdateRes = await this.sequelize.query(noticeUpdate, {
+        replacements: { noticeId: info.noticeId },
+        type: QueryTypes.UPDATE,
+        transaction: t,
+      })
+      const fromFriendInsertRes = await this.sequelize.query(friendInsert, {
+        replacements: {
+          fromId: noticeSelectRes[0].fromId,
+          toId: noticeSelectRes[0].toId,
+          friendGroupId: noticeSelectRes[0].friendGroupId,
+          remarks: noticeSelectRes[0].remarks,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      const toFriendInsertRes = await this.sequelize.query(friendInsert, {
+        replacements: {
+          fromId: noticeSelectRes[0].toId,
+          toId: noticeSelectRes[0].fromId,
+          friendGroupId: info.friendGroupId,
+          remarks: info.remarks,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      const fromChatMessageInsert = await this.sequelize.query(chatMessageInsert, {
+        replacements: {
+          fromId: noticeSelectRes[0].fromId,
+          toId: noticeSelectRes[0].toId,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      const toChatMessageInsert = await this.sequelize.query(chatMessageInsert, {
+        replacements: {
+          fromId: noticeSelectRes[0].toId,
+          toId: noticeSelectRes[0].fromId,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      return (
+        !!noticeUpdateRes[1] &&
+        !!fromFriendInsertRes[1] &&
+        !!toFriendInsertRes[1] &&
+        !!fromChatMessageInsert[1] &&
+        !!toChatMessageInsert[1]
+      )
+    })
+    return result
+  }
+
+  async refuseAddContact(id: RefuseAddContactInfo) {
+    const noticeUpdate = `UPDATE friendNotices SET status = 2 WHERE id = :noticeId`
+    const result = await this.sequelize.query(noticeUpdate, {
+      replacements: { ...id },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
   }
 }

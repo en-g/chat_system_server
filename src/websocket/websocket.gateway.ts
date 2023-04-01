@@ -1,5 +1,12 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
-import { AddContactApplication, AddGroupApplication, ClientId, ClientItem, Clients } from './dto/websocket.dto'
+import {
+  AddContactApplication,
+  AddGroupApplication,
+  ClientId,
+  Clients,
+  UpdateContactListId,
+  UpdateGroupListId,
+} from './dto/websocket.dto'
 import { WebsocketService } from './websocket.service'
 
 @WebSocketGateway(3002, { cors: true })
@@ -41,7 +48,7 @@ export class WebsocketGateway {
     }
   }
 
-  // 添加联系人
+  // 添加群聊
   @SubscribeMessage('addGroup')
   async onAddGroup(@MessageBody() info: AddGroupApplication) {
     const res = await this.websocketService.setGroupNotice(info)
@@ -52,6 +59,28 @@ export class WebsocketGateway {
           this.clients[clientId].socket.emit('addGroupNotice', detail)
           break
         }
+      }
+    }
+  }
+
+  // 更新联系人列表
+  @SubscribeMessage('updateContactList')
+  async onUpdatecontactList(@MessageBody() id: UpdateContactListId) {
+    for (const cliendId of Object.keys(this.clients)) {
+      if (this.clients[cliendId].userId === id.userId) {
+        this.clients[cliendId].socket.emit('updateContactList')
+        break
+      }
+    }
+  }
+
+  // 更新群聊列表
+  @SubscribeMessage('updateGroupList')
+  async onUpdateGroupList(@MessageBody() id: UpdateGroupListId) {
+    for (const cliendId of Object.keys(this.clients)) {
+      if (this.clients[cliendId].userId === id.userId) {
+        this.clients[cliendId].socket.emit('updateGroupList')
+        break
       }
     }
   }

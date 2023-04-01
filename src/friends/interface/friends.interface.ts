@@ -17,3 +17,13 @@ export interface SearchFriendAndGroupsByKeyword {
   keyword: string
   userId: string
 }
+
+export interface AgreeAddContactInfo {
+  noticeId: number
+  friendGroupId: number
+  remarks: string
+}
+
+export interface RefuseAddContactInfo {
+  noticeId: number
+}
