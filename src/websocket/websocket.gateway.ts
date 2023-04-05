@@ -2,18 +2,20 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from
 import {
   AddContactApplication,
   AddGroupApplication,
+  ChatMessageInfo,
   ClientId,
   Clients,
   UpdateContactListId,
   UpdateGroupListId,
 } from './dto/websocket.dto'
 import { WebsocketService } from './websocket.service'
+import { MessageService } from '../message/message.service'
 
 @WebSocketGateway(3002, { cors: true })
 export class WebsocketGateway {
   clients: Clients = {}
   heartbeatTimer: any = null
-  constructor(private readonly websocketService: WebsocketService) {}
+  constructor(private readonly websocketService: WebsocketService, private readonly messageService: MessageService) {}
 
   // 客户端连接
   @SubscribeMessage('connection')
@@ -82,6 +84,49 @@ export class WebsocketGateway {
         this.clients[cliendId].socket.emit('updateGroupList')
         break
       }
+    }
+  }
+
+  // 聊天
+  @SubscribeMessage('chat')
+  async onChat(@MessageBody() info: ChatMessageInfo) {
+    if (info.isContact) {
+      // 如果是联系人之间的聊天
+      // 对方在线，就将消息转发过去
+      for (const cliendId of Object.keys(this.clients)) {
+        if (this.clients[cliendId].userId === info.toId) {
+          this.clients[cliendId].socket.emit('chat', info)
+          break
+        }
+      }
+      // 保存消息
+      this.messageService.saveContactChatMessage({
+        fromId: info.fromId,
+        toId: info.toId,
+        type: info.type,
+        message: info.message,
+        url: info.url,
+      })
+    } else {
+      // 如果是群聊的聊天
+      // 遍历群所有的成员，对在线的成员进行转发
+
+      // 测试
+      for (const cliendId of Object.keys(this.clients)) {
+        if (this.clients[cliendId].userId === 1) {
+          this.clients[cliendId].socket.emit('chat', info)
+          break
+        }
+      }
+
+      // 保存消息
+      this.messageService.saveGroupChatMessage({
+        groupId: info.groupId,
+        sendId: info.fromId,
+        type: info.type,
+        message: info.message,
+        url: info.url,
+      })
     }
   }
 

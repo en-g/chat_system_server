@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class Clients {
   [key: number]: ClientItem
@@ -74,4 +74,34 @@ export class UpdateGroupListId {
   @IsNotEmpty()
   @IsNumber()
   userId: number
+}
+
+export class ChatMessageInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  fromId: number
+
+  @IsOptional()
+  @IsNumber()
+  toId: number
+
+  @IsOptional()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  type: number
+
+  @IsOptional()
+  @IsString()
+  message: string
+
+  @IsOptional()
+  @IsString()
+  url: string
+
+  @IsNotEmpty()
+  @IsBoolean()
+  isContact: boolean
 }
