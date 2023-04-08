@@ -59,3 +59,9 @@ export class RefuseAddContactInfo {
   @IsNumber()
   noticeId: number
 }
+
+export class GetAllContactInfo {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+}

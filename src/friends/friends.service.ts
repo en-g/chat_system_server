@@ -5,6 +5,7 @@ import {
   AgreeAddContactInfo,
   FriendInfoIds,
   FriendListId,
+  GetAllContactInfo,
   RefuseAddContactInfo,
   SearchFriendAndGroupsByKeyword,
   UpdateFriendRemarksInfo,
@@ -222,5 +223,19 @@ export class FriendsService {
       type: QueryTypes.UPDATE,
     })
     return !!result[1]
+  }
+
+  async getAllContactInfo(id: GetAllContactInfo) {
+    const contactListSelect = `
+      SELECT f.friend_id userId, ui.nickname, ui.avatar_url avatarUrl
+      FROM friends f
+      INNER JOIN userInfo ui ON ui.user_id = f.friend_id
+      WHERE f.user_id = :userId
+    `
+    const result = await this.sequelize.query(contactListSelect, {
+      replacements: { ...id },
+      type: QueryTypes.SELECT,
+    })
+    return result
   }
 }

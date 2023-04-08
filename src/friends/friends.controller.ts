@@ -4,6 +4,7 @@ import {
   AgreeAddContactInfo,
   FriendInfoIds,
   FriendListId,
+  GetAllContactInfo,
   RefuseAddContactInfo,
   SearchFriendAndGroupsByKeyword,
   UpdateFriendRemarksInfo,
@@ -49,5 +50,11 @@ export class FriendsController {
   @Put('refuse')
   async refuseAddContact(@Body() id: RefuseAddContactInfo) {
     return await this.friendsService.refuseAddContact(id)
+  }
+
+  // 后去所有联系人简单信息
+  @Get('all/:userId')
+  async getAllContactInfo(@Param() id: GetAllContactInfo) {
+    return await this.friendsService.getAllContactInfo(id)
   }
 }

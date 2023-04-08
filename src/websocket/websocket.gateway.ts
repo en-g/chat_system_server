@@ -113,7 +113,7 @@ export class WebsocketGateway {
 
       // 测试
       for (const cliendId of Object.keys(this.clients)) {
-        if (this.clients[cliendId].userId === 1) {
+        if (this.clients[cliendId].userId === 2) {
           this.clients[cliendId].socket.emit('chat', info)
           break
         }

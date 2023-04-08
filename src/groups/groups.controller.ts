@@ -1,6 +1,13 @@
 import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { AgreeAddGropId, GroupInfoIds, GroupsListId, RefuseAddGropId, UpdateGroupRemarksInfo } from './dto/groups.dto'
+import {
+  AgreeAddGropId,
+  CreateGroupInfo,
+  GroupInfoIds,
+  GroupsListId,
+  RefuseAddGropId,
+  UpdateGroupRemarksInfo,
+} from './dto/groups.dto'
 import { GroupsService } from './groups.service'
 
 @UseGuards(AuthGuard('jwt'))
@@ -36,5 +43,17 @@ export class GroupsController {
   @Put('refuse')
   async refuseAddGroup(@Body() id: RefuseAddGropId) {
     return await this.groupsService.refuseAddGroup(id)
+  }
+
+  // 获取群聊默认头像列表
+  @Get('defaultAvatar/list')
+  async getGroupDefaultAvatarList() {
+    return await this.groupsService.getGroupDefaultAvatarList()
+  }
+
+  // 创建群聊
+  @Post('create')
+  async createGroup(@Body() info: CreateGroupInfo) {
+    return await this.groupsService.createGroup(info)
   }
 }

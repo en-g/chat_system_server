@@ -3,6 +3,7 @@ import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   AgreeAddGropId,
+  CreateGroupInfo,
   GroupInfoIds,
   GroupsListId,
   RefuseAddGropId,
@@ -165,5 +166,45 @@ export class GroupsService {
       type: QueryTypes.UPDATE,
     })
     return !!result[1]
+  }
+
+  async getGroupDefaultAvatarList() {
+    const avatarListSelect = `SELECT id, url FROM files WHERE url LIKE '%defaultGroupAvatar%'`
+    const result = await this.sequelize.query(avatarListSelect, {
+      type: QueryTypes.SELECT,
+    })
+    return result
+  }
+
+  async createGroup(info: CreateGroupInfo) {
+    const createGroupInsert = `INSERT INTO chatGroups (leader_id, number, name, avatar_url) VALUES (:leaderId, :number, :name, :avatarUrl)`
+    const userGroupInsert = `INSERT INTO user_group (user_id, group_id) VALUES (:userId, :groupId)`
+    const number = this.createRandomNumber()
+    const result = await this.sequelize.transaction(async (t) => {
+      const createGroupInsertRes = await this.sequelize.query(createGroupInsert, {
+        replacements: { ...info, number },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!createGroupInsertRes[1]) {
+        return false
+      }
+      const groupId = createGroupInsertRes[0]
+      let res = true
+      for (const userId of info.members) {
+        const userGroupInsertRes = await this.sequelize.query(userGroupInsert, {
+          replacements: { userId, groupId },
+          type: QueryTypes.INSERT,
+          transaction: t,
+        })
+        res = res && !!userGroupInsertRes[1]
+      }
+      return res
+    })
+    return result
+  }
+
+  createRandomNumber() {
+    return (Math.random() * 10000000000).toString().split('.')[0]
   }
 }

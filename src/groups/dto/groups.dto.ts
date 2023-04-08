@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsNumberString, IsString } from 'class-validator'
+import { IsArray, IsNotEmpty, IsNumber, IsNumberString, IsString } from 'class-validator'
 
 export class GroupsListId {
   @IsNotEmpty()
@@ -40,4 +40,22 @@ export class RefuseAddGropId {
   @IsNotEmpty()
   @IsNumber()
   noticeId: number
+}
+
+export class CreateGroupInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  leaderId: number
+
+  @IsNotEmpty()
+  @IsString()
+  name: string
+
+  @IsNotEmpty()
+  @IsString()
+  avatarUrl: string
+
+  @IsNotEmpty()
+  @IsArray()
+  members: Array<number>
 }

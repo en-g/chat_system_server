@@ -20,3 +20,10 @@ export interface AgreeAddGropId {
 export interface RefuseAddGropId {
   noticeId: number
 }
+
+export interface CreateGroupInfo {
+  leaderId: number
+  name: string
+  avatarUrl: string
+  members: Array<number>
+}

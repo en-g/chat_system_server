@@ -27,3 +27,7 @@ export interface AgreeAddContactInfo {
 export interface RefuseAddContactInfo {
   noticeId: number
 }
+
+export interface GetAllContactInfo {
+  userId: string
+}
