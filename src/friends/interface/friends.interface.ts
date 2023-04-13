@@ -36,3 +36,8 @@ export interface DeleteContact {
   userId: number
   friendId: number
 }
+
+export interface ContactListAboutGroup {
+  userId: string
+  groupId: string
+}

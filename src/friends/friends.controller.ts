@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } fro
 import { AuthGuard } from '@nestjs/passport'
 import {
   AgreeAddContactInfo,
+  ContactListAboutGroup,
   DeleteContact,
   FriendInfoIds,
   FriendListId,
@@ -63,5 +64,11 @@ export class FriendsController {
   @Delete()
   async deleteContact(@Body() ids: DeleteContact) {
     return this.friendsService.deleteContact(ids)
+  }
+
+  // 获取联系人列表与群聊的关系
+  @Get('about/list')
+  async getContactListAboutGroup(@Query() ids: ContactListAboutGroup) {
+    return await this.friendsService.getContactListAboutGroup(ids)
   }
 }

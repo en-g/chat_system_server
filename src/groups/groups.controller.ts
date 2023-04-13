@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import {
   AgreeAddGropId,
   CreateGroupInfo,
+  DismissGroup,
+  ExitGroup,
   GroupInfoIds,
   GroupsListId,
   RefuseAddGropId,
@@ -55,5 +57,17 @@ export class GroupsController {
   @Post('create')
   async createGroup(@Body() info: CreateGroupInfo) {
     return await this.groupsService.createGroup(info)
+  }
+
+  // 退出群聊
+  @Delete('exit')
+  async exitGroup(@Body() ids: ExitGroup) {
+    return await this.groupsService.exitGroup(ids)
+  }
+
+  // 解散群聊
+  @Delete('dismiss')
+  async dismissGroup(@Body() ids: DismissGroup) {
+    return await this.groupsService.dismissGroup(ids)
   }
 }

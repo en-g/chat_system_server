@@ -3,6 +3,7 @@ import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   AgreeAddContactInfo,
+  ContactListAboutGroup,
   DeleteContact,
   FriendInfoIds,
   FriendListId,
@@ -257,6 +258,25 @@ export class FriendsService {
         transaction: t,
       })
       return true
+    })
+    return result
+  }
+
+  async getContactListAboutGroup(ids: ContactListAboutGroup) {
+    const contactListSelect = `
+      SELECT f.friend_id userId, ui.nickname name, ui.avatar_url avatarUrl, IF(ugg.userId, 1, 0) isMember
+      FROM friends f
+      INNER JOIN userInfo ui ON ui.user_id = f.friend_id
+      LEFT JOIN (
+        SELECT ug.group_id groupId, ug.user_id userId
+        FROM user_group ug
+        WHERE ug.group_id = :groupId
+      ) ugg ON ugg.userId = f.friend_id
+      WHERE f.user_id = :userId
+    `
+    const result = await this.sequelize.query(contactListSelect, {
+      replacements: { ...ids },
+      type: QueryTypes.SELECT,
     })
     return result
   }

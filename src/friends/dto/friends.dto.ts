@@ -75,3 +75,13 @@ export class DeleteContact {
   @IsNumber()
   friendId: number
 }
+
+export class ContactListAboutGroup {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  groupId: string
+}

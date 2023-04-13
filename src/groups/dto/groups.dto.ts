@@ -59,3 +59,23 @@ export class CreateGroupInfo {
   @IsArray()
   members: Array<number>
 }
+
+export class ExitGroup {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+}
+
+export class DismissGroup {
+  @IsNotEmpty()
+  @IsNumber()
+  leaderId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+}

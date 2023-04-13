@@ -4,6 +4,8 @@ import { Sequelize } from 'sequelize-typescript'
 import {
   AgreeAddGropId,
   CreateGroupInfo,
+  DismissGroup,
+  ExitGroup,
   GroupInfoIds,
   GroupsListId,
   RefuseAddGropId,
@@ -71,6 +73,7 @@ export class GroupsService {
         cg.notice,
         ug.disturb,
         cg.createAt createTime,
+        cg.leader_id leaderId,
         cg.leader_id = 1 isLeader,
         ugui.members
       FROM chatGroups cg
@@ -209,5 +212,33 @@ export class GroupsService {
 
   createRandomNumber() {
     return (Math.random() * 10000000000).toString().split('.')[0]
+  }
+
+  async exitGroup(ids: ExitGroup) {
+    const exitGroupDelete = `DELETE FROM user_group WHERE user_id = :userId AND group_id = :groupId`
+    await this.sequelize.query(exitGroupDelete, {
+      replacements: { ...ids },
+      type: QueryTypes.DELETE,
+    })
+    return true
+  }
+
+  async dismissGroup(ids: DismissGroup) {
+    // const gropDelete = `DELETE FROM chatGroups WHERE leader_id = :leaderId AND id = :groupId`
+    const userDelete = `DELETE FROM user_group WHERE group_id = :groupId`
+    const result = await this.sequelize.transaction(async (t) => {
+      // await this.sequelize.query(gropDelete, {
+      //   replacements: { ...ids },
+      //   type: QueryTypes.DELETE,
+      //   transaction: t,
+      // })
+      await this.sequelize.query(userDelete, {
+        replacements: { ...ids },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      return true
+    })
+    return result
   }
 }

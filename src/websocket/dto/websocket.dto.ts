@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class Clients {
   [key: number]: ClientItem
@@ -46,6 +46,16 @@ export class AddContactApplication {
   remarks?: string
 }
 
+export class DeleteContactApplication {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendId: number
+}
+
 export class AddGroupApplication {
   @IsNotEmpty()
   @IsNumber()
@@ -72,6 +82,56 @@ export class CreateGroupApplication {
   userId: number
   groupId: number
   members: Array<number>
+}
+
+export class InviteGroupApplication {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsArray()
+  inviteIds: Array<number>
+}
+
+export class ExitGroupApplication {
+  @IsNotEmpty()
+  @IsNumber()
+  fromId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  toId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  type: string
+}
+
+export class DismissGroupApplication {
+  @IsNotEmpty()
+  @IsNumber()
+  fromId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  toId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  type: string
 }
 
 export class EnterGroupInfo {

@@ -27,3 +27,13 @@ export interface CreateGroupInfo {
   avatarUrl: string
   members: Array<number>
 }
+
+export interface ExitGroup {
+  userId: number
+  groupId: number
+}
+
+export interface DismissGroup {
+  leaderId: number
+  groupId: number
+}

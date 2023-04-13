@@ -16,6 +16,7 @@ import { PyqModule } from './pyq/pyq.module'
 import { WebsocketModule } from './websocket/websocket.module'
 import { NoticeModule } from './notice/notice.module'
 import { MessageModule } from './message/message.module'
+import { EmotionModule } from './emotion/emotion.module';
 
 // 通用环境变量
 const envFilePath = ['.env']
@@ -57,6 +58,7 @@ if (process.env.NODE_ENV === 'development') {
     WebsocketModule,
     NoticeModule,
     MessageModule,
+    EmotionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
