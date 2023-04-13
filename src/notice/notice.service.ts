@@ -82,7 +82,12 @@ export class NoticeService {
       replacements: { ...id },
       type: QueryTypes.SELECT,
     })
-    if (noticeSelectRes.length === 0 || noticeSelectRes[0].type !== 'exit' || noticeSelectRes[0].type !== 'dismiss')
+    if (
+      noticeSelectRes.length === 0 ||
+      (noticeSelectRes[0].type !== 'exit' &&
+        noticeSelectRes[0].type !== 'dismiss' &&
+        noticeSelectRes[0].type !== 'create')
+    )
       return false
     const noticeUpdateRes = await this.sequelize.query(noticeUpdate, {
       replacements: { ...id },

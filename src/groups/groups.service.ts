@@ -199,7 +199,10 @@ export class GroupsService {
         })
         res = res && !!userGroupInsertRes[1]
       }
-      return res
+      return {
+        status: res,
+        groupId,
+      }
     })
     return result
   }

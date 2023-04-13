@@ -3,6 +3,7 @@ import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   AgreeAddContactInfo,
+  DeleteContact,
   FriendInfoIds,
   FriendListId,
   GetAllContactInfo,
@@ -66,20 +67,23 @@ export class FriendsService {
   async getFriendInfo(ids: FriendInfoIds) {
     const friendInfoSelect = `
       SELECT 
-        f.friend_id id, 
-        ui.nickname, 
-        f.remarks, 
-        ui.avatar_url avatarUrl, 
-        ui.sex, 
-        ui.signature, 
-        ui.birthday, 
-        u.email, 
-        u.username,
-        f.disturb
-      FROM friends f
-      INNER JOIN userInfo ui ON ui.user_id = f.friend_id
-      INNER JOIN users u ON u.id = f.friend_id
-      WHERE f.user_id = :userId AND f.friend_id = :friendId
+      f.friend_id id, 
+      ui.nickname, 
+      f.remarks, 
+      ui.avatar_url avatarUrl, 
+      ui.sex, 
+      ui.signature, 
+      ui.birthday, 
+      u.email, 
+      u.username,
+      f.disturb,
+      f.friendGroup_id friendGroupId,
+      fg.name friendGroupName
+    FROM friends f
+    INNER JOIN userInfo ui ON ui.user_id = f.friend_id
+    INNER JOIN users u ON u.id = f.friend_id
+    INNER JOIN friendGroups fg ON fg.id = f.friendGroup_id
+    WHERE f.user_id = :userId AND f.friend_id = :friendId
     `
     const result = await this.sequelize.query(friendInfoSelect, {
       replacements: {
@@ -235,6 +239,24 @@ export class FriendsService {
     const result = await this.sequelize.query(contactListSelect, {
       replacements: { ...id },
       type: QueryTypes.SELECT,
+    })
+    return result
+  }
+
+  async deleteContact(ids: DeleteContact) {
+    const contactDelete = `DELETE FROM friends WHERE user_id = :userId AND friend_id = :friendId`
+    const result = await this.sequelize.transaction(async (t) => {
+      await this.sequelize.query(contactDelete, {
+        replacements: { userId: ids.userId, friendId: ids.friendId },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(contactDelete, {
+        replacements: { userId: ids.friendId, friendId: ids.userId },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      return true
     })
     return result
   }

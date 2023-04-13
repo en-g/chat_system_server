@@ -43,3 +43,17 @@ export class UpdateFriendGroup {
   @IsString()
   name: string
 }
+
+export class UpdateContactFriendGroup {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendGroupId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendId: number
+}

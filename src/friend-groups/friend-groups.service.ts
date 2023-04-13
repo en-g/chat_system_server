@@ -5,6 +5,7 @@ import {
   AddFriendGroup,
   DeleteFriendGroup,
   FriendGroupListId,
+  UpdateContactFriendGroup,
   UpdateFriendGroup,
 } from './interface/friend-groups.interface'
 
@@ -97,6 +98,17 @@ export class FriendGroupsService {
     const result = await this.sequelize.query(friendGroupUpdate, {
       replacements: {
         ...info,
+      },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
+  }
+
+  async updateContactFriendGroup(ids: UpdateContactFriendGroup) {
+    const friendGroupUpdate = `UPDATE friends SET friendGroup_id = :friendGroupId WHERE user_id = :userId AND friend_id = :friendId`
+    const result = await this.sequelize.query(friendGroupUpdate, {
+      replacements: {
+        ...ids,
       },
       type: QueryTypes.UPDATE,
     })

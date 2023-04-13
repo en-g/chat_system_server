@@ -31,3 +31,8 @@ export interface RefuseAddContactInfo {
 export interface GetAllContactInfo {
   userId: string
 }
+
+export interface DeleteContact {
+  userId: number
+  friendId: number
+}

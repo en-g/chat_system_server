@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import {
   AgreeAddContactInfo,
+  DeleteContact,
   FriendInfoIds,
   FriendListId,
   GetAllContactInfo,
@@ -52,9 +53,15 @@ export class FriendsController {
     return await this.friendsService.refuseAddContact(id)
   }
 
-  // 后去所有联系人简单信息
+  // 获取所有联系人简单信息
   @Get('all/:userId')
   async getAllContactInfo(@Param() id: GetAllContactInfo) {
     return await this.friendsService.getAllContactInfo(id)
+  }
+
+  // 删除联系人
+  @Delete()
+  async deleteContact(@Body() ids: DeleteContact) {
+    return this.friendsService.deleteContact(ids)
   }
 }

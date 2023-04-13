@@ -4,6 +4,10 @@ export class Clients {
   [key: number]: ClientItem
 }
 
+export class GroupsMembers {
+  [groupId: number]: Array<number>
+}
+
 export class ClientItem {
   userId: number
   socket: any
@@ -62,6 +66,17 @@ export class AddGroupApplication {
   @IsOptional()
   @IsString()
   message?: string
+}
+
+export class CreateGroupApplication {
+  userId: number
+  groupId: number
+  members: Array<number>
+}
+
+export class EnterGroupInfo {
+  userId: number
+  groupId: number
 }
 
 export class UpdateContactListId {

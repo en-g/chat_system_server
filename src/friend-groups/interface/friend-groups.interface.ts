@@ -18,3 +18,9 @@ export interface UpdateFriendGroup {
   friendGroupId: number
   name: string
 }
+
+export interface UpdateContactFriendGroup {
+  userId: number
+  friendGroupId: number
+  friendId: number
+}

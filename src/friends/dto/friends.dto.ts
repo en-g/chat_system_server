@@ -65,3 +65,13 @@ export class GetAllContactInfo {
   @IsNumberString()
   userId: string
 }
+
+export class DeleteContact {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  friendId: number
+}
