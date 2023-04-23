@@ -79,3 +79,93 @@ export class LifeTidingsInfo {
   @IsArray()
   pictureIds: Array<number>
 }
+
+export class ThumbsUpLifeTidingsIds {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class CollectLifeTidingsIds {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class DeleteLifeTidingsId {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+}
+
+export class LifeTidingDetailId {
+  @IsNotEmpty()
+  @IsNumberString()
+  lifeTidingId: string
+
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+}
+
+export class CommentLifeTidingsInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  fromId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  toId: number
+
+  @IsNotEmpty()
+  @IsString()
+  content: string
+}
+
+export class ReplyLifeTidingsInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  lifeCommentId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  fromId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  toId: number
+
+  @IsNotEmpty()
+  @IsString()
+  content: string
+}
+
+export class ThumbsUpCommentIds {
+  @IsNotEmpty()
+  @IsNumber()
+  lifeTidingId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  lifeCommentId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}

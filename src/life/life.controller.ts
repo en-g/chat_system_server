@@ -1,5 +1,8 @@
-import { Body, Controller, Get, Post, Query, Param } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Param, Delete } from '@nestjs/common'
 import {
+  CollectLifeTidingsIds,
+  CommentLifeTidingsInfo,
+  DeleteLifeTidingsId,
   GetCollectionListId,
   GetMessageListId,
   GetNewLifeTidingsListId,
@@ -7,7 +10,11 @@ import {
   GetUserCenterInfo,
   GetUserLifeTidingsListId,
   GetUserLifeTidingsListInfo,
+  LifeTidingDetailId,
   LifeTidingsInfo,
+  ReplyLifeTidingsInfo,
+  ThumbsUpCommentIds,
+  ThumbsUpLifeTidingsIds,
 } from './dto/life.dto'
 import { LifeService } from './life.service'
 
@@ -61,5 +68,71 @@ export class LifeController {
   @Post()
   async releaseLifeTidings(@Body() info: LifeTidingsInfo) {
     return await this.lifeService.releaseLifeTidings(info)
+  }
+
+  // 点赞动态
+  @Post('thumbs')
+  async thumbsLifeTidings(@Body() ids: ThumbsUpLifeTidingsIds) {
+    return await this.lifeService.thumbsLifeTidings(ids)
+  }
+
+  // 取消点赞
+  @Delete('thumbs')
+  async deleteThumbsLifeTidings(@Body() ids: ThumbsUpLifeTidingsIds) {
+    return await this.lifeService.deleteThumbsLifeTidings(ids)
+  }
+
+  // 收藏动态
+  @Post('collect')
+  async collectLifeTidings(@Body() ids: CollectLifeTidingsIds) {
+    return await this.lifeService.collectLifeTidings(ids)
+  }
+
+  // 取消收藏动态
+  @Delete('collect')
+  async deleteCollectLifeTidings(@Body() ids: CollectLifeTidingsIds) {
+    return await this.lifeService.deleteCollectLifeTidings(ids)
+  }
+
+  // 删除动态
+  @Delete()
+  async deleteLifeTidings(@Body() id: DeleteLifeTidingsId) {
+    return await this.lifeService.deleteLifeTidings(id)
+  }
+
+  // 获取动态详情
+  @Get('detail')
+  async getLifeTidingDetail(@Query() ids: LifeTidingDetailId) {
+    return await this.lifeService.getLifeTidingDetail(ids)
+  }
+
+  // 评论
+  @Post('comment')
+  async commentLifeTidings(@Body() info: CommentLifeTidingsInfo) {
+    return await this.lifeService.commentLifeTidings(info)
+  }
+
+  // 回复
+  @Post('reply')
+  async replyLifeTidings(@Body() info: ReplyLifeTidingsInfo) {
+    return await this.lifeService.replyLifeTidings(info)
+  }
+
+  // 点赞评论
+  @Post('comment/thumbs')
+  async thumbLifeComment(@Body() ids: ThumbsUpCommentIds) {
+    return await this.lifeService.thumbLifeComment(ids)
+  }
+
+  // 取消点赞评论
+  @Delete('comment/thumbs')
+  async cancelthumbLifeComment(@Body() ids: ThumbsUpCommentIds) {
+    return await this.lifeService.cancelthumbLifeComment(ids)
+  }
+
+  // 获取热门动态列表
+  @Get('list/hot/base')
+  async getHotBaseLifeTidingsList() {
+    return await this.lifeService.getHotBaseLifeTidingsList()
   }
 }

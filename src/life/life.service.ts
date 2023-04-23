@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { Sequelize } from 'sequelize-typescript'
 import {
+  CollectLifeTidingsIds,
+  CommentLifeTidingsInfo,
+  DeleteLifeTidingsId,
   GetCollectionListId,
   GetMessageListId,
   GetNewLifeTidingsListId,
@@ -8,7 +11,11 @@ import {
   GetUserCenterInfo,
   GetUserLifeTidingsListId,
   GetUserLifeTidingsListInfo,
+  LifeTidingDetailId,
   LifeTidingsInfo,
+  ReplyLifeTidingsInfo,
+  ThumbsUpCommentIds,
+  ThumbsUpLifeTidingsIds,
 } from './interface/life.interface'
 import { QueryTypes } from 'sequelize'
 
@@ -23,7 +30,7 @@ export class LifeService {
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
-        IFNULL((lcttt.commentCount1 + lctuu.commentCount2), 0) commentsCount, 
+        IFNULL((IFNULL(lcttt.commentCount1, 0) + IFNULL(lctuu.commentCount2, 0)), 0) commentsCount, 
         IFNULL(lccc.collectionsCount, 0) collectionsCount, lt.readings
       FROM lifeTidings lt
       INNER JOIN userInfo ui ON ui.user_id = lt.user_id
@@ -115,7 +122,7 @@ export class LifeService {
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
-        IFNULL((lcttt.commentCount1 + lctuu.commentCount2), 0) commentsCount, 
+        IFNULL((IFNULL(lcttt.commentCount1, 0) + IFNULL(lctuu.commentCount2, 0)), 0) commentsCount, 
         IFNULL(lccc.collectionsCount, 0) collectionsCount, lt.readings
       FROM lifeTidings lt
       INNER JOIN userInfo ui ON ui.user_id = lt.user_id
@@ -157,8 +164,8 @@ export class LifeService {
         FROM lifeCollections lc
         GROUP BY lc.lifeTidings_id
       ) lccc ON lccc.lifeTidings_id = lt.id
-      ORDER BY (lcttt.commentCount1 + lctuu.commentCount2) DESC, 
-              lt.readings DESC, 
+      ORDER BY lt.readings DESC,
+              (lcttt.commentCount1 + lctuu.commentCount2) DESC, 
               ltuuu.thumbsUpCount DESC, 
               lccc.collectionsCount DESC
     `
@@ -210,7 +217,7 @@ export class LifeService {
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
-        IFNULL((lcttt.commentCount1 + lctuu.commentCount2), 0) commentsCount, 
+        IFNULL((IFNULL(lcttt.commentCount1, 0) + IFNULL(lctuu.commentCount2, 0)), 0) commentsCount, 
         IFNULL(lccc.collectionsCount, 0) collectionsCount, lt.readings
       FROM lifeTidings lt
       INNER JOIN userInfo ui ON ui.user_id = lt.user_id
@@ -301,7 +308,7 @@ export class LifeService {
       SELECT ui.user_id userId, ui.nickname name, ui.avatar_url avatarUrl, 
         IFNULL((ltt.thumbsUpCount1 + lcttt.thumbsUpCount2), 0) likes, 
         IFNULL(JSON_LENGTH(lrr.ids), 0) fans, 
-        IFNULL((lttt.commentCount1 + lctttt.commentCount2), 0) comments,
+        IFNULL((IFNULL(lttt.commentCount1, 0) + IFNULL(lctttt.commentCount2, 0)), 0) comments,
         IFNULL(JSON_CONTAINS(lrr.ids, JSON_ARRAY(:selfId + 0)), 0) isRegard,
         IFNULL(JSON_CONTAINS(ff.ids, JSON_ARRAY(:selfId + 0)), 0) isAdd
       FROM userInfo ui
@@ -451,6 +458,344 @@ export class LifeService {
         res = res && !!imageInssertRes[1]
       }
       return res
+    })
+    return result
+  }
+
+  async thumbsLifeTidings(ids: ThumbsUpLifeTidingsIds) {
+    const thumbsTidingInsert = `INSERT INTO lifeTidingsThumbsUp (lifeTidings_id, user_id) VALUES (:lifeTidingId, :userId)`
+    const result = await this.sequelize.query(thumbsTidingInsert, {
+      replacements: { ...ids },
+      type: QueryTypes.INSERT,
+    })
+    return !!result[1]
+  }
+
+  async deleteThumbsLifeTidings(ids: ThumbsUpLifeTidingsIds) {
+    const thumbsTidingDelete = `DELETE FROM lifeTidingsThumbsUp WHERE lifeTidings_id = :lifeTidingId AND user_id = :userId`
+    await this.sequelize.query(thumbsTidingDelete, {
+      replacements: { ...ids },
+      type: QueryTypes.DELETE,
+    })
+    return true
+  }
+
+  async collectLifeTidings(ids: CollectLifeTidingsIds) {
+    const collectTidingsInsert = `INSERT INTO lifeCollections (lifeTidings_id, user_id) VALUES (:lifeTidingId, :userId)`
+    const result = await this.sequelize.query(collectTidingsInsert, {
+      replacements: { ...ids },
+      type: QueryTypes.INSERT,
+    })
+    return !!result[1]
+  }
+
+  async deleteCollectLifeTidings(ids: CollectLifeTidingsIds) {
+    const collectTidingsDelete = `DELETE FROM lifeCollections WHERE lifeTidings_id = :lifeTidingId AND user_id = :userId`
+    await this.sequelize.query(collectTidingsDelete, {
+      replacements: { ...ids },
+      type: QueryTypes.DELETE,
+    })
+    return true
+  }
+
+  async deleteLifeTidings(id: DeleteLifeTidingsId) {
+    const delete1 = `DELETE FROM lifeTidings WHERE id = :lifeTidingId`
+    const delete2 = `DELETE FROM lifeTidingsImages WHERE lifeTidings_id = :lifeTidingId`
+    const delete3 = `DELETE FROM lifeTidingsThumbsUp WHERE lifeTidings_id = :lifeTidingId`
+    const delete4 = `DELETE FROM lifeCollections WHERE lifeTidings_id = :lifeTidingId`
+    const delete5 = `DELETE FROM lifeCommentToTidings WHERE lifeTidings_id = :lifeTidingId`
+    const delete6 = `DELETE FROM lifeCommentToUser WHERE lifeTidings_id = :lifeTidingId`
+    const delete7 = `DELETE FROM lifeCommentThumbsUp WHERE lifeTidings_id = :lifeTidingId`
+    const result = await this.sequelize.transaction(async (t) => {
+      await this.sequelize.query(delete1, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete2, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete3, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete4, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete5, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete6, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(delete7, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      return true
+    })
+    return result
+  }
+
+  async getLifeTidingDetail(ids: LifeTidingDetailId) {
+    const readingInsert = `UPDATE lifeTidings SET readings = readings + 1 WHERE id = :lifeTidingId`
+    const lifeTidingDetailSelect = `
+      SELECT lt.id, lt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl, lt.title, lt.content, 
+        lt.createAt createTime, ltif.pictures, 
+        IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
+        IFNULL(lcc.isCollect, 0) isCollect, 
+        IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
+        IFNULL((IFNULL(lcttt.commentCount1, 0) + IFNULL(lctuu.commentCount2, 0)), 0) commentsCount,  
+        IFNULL(lccc.collectionsCount, 0) collectionsCount, lt.readings
+      FROM lifeTidings lt
+      INNER JOIN userInfo ui ON ui.user_id = lt.user_id
+      LEFT JOIN (
+        SELECT lti.lifeTidings_id, JSON_ARRAYAGG(
+          JSON_OBJECT('id', lti.id, 'url', f.url)
+        ) pictures
+        FROM lifeTidingsImages lti
+        INNER JOIN files f ON f.id = lti.file_id
+        GROUP BY lti.lifeTidings_id
+      ) ltif ON ltif.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lttu.lifeTidings_id, JSON_CONTAINS(JSON_ARRAYAGG(lttu.user_id), JSON_ARRAY(:userId + 0)) isThumbsUp
+        FROM lifeTidingsThumbsUp lttu
+        GROUP BY lttu.lifeTidings_id
+      ) lttuu ON lttuu.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lc.lifeTidings_id, JSON_CONTAINS(JSON_ARRAYAGG(lc.user_id), JSON_ARRAY(:userId + 0)) isCollect
+        FROM lifeCollections lc
+        GROUP BY lc.lifeTidings_id
+      ) lcc ON lcc.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lttu.lifeTidings_id, COUNT(*) thumbsUpCount
+        FROM lifeTidingsThumbsUp lttu
+        GROUP BY lttu.lifeTidings_id
+      ) ltuuu ON ltuuu.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lctt.lifeTidings_id, COUNT(*) commentCount1
+        FROM lifeCommentToTidings lctt
+        GROUP BY lctt.lifeTidings_id
+      ) lcttt ON lcttt.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lctu.lifeTidings_id, COUNT(*) commentCount2
+        FROM lifeCommentToUser lctu
+        GROUP BY lctu.lifeTidings_id
+      ) lctuu ON lctuu.lifeTidings_id = lt.id
+      LEFT JOIN (
+        SELECT lc.lifeTidings_id, COUNT(*) collectionsCount
+        FROM lifeCollections lc
+        GROUP BY lc.lifeTidings_id
+      ) lccc ON lccc.lifeTidings_id = lt.id
+      WHERE lt.id = :lifeTidingId
+    `
+    const lifeTidingCommentSelect = `
+      SELECT lctt.id, lctt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl,
+        lctt.content, lctt.createAt createTime,
+        IFNULL(lctuu.thumbsUpCount, 0) thumbsUpCount,
+        IFNULL(lctuuu.isThumbsUp, 0) isThumbsUp
+      FROM lifeCommentToTidings lctt
+      INNER JOIN userInfo ui ON ui.user_id = lctt.user_id
+      LEFT JOIN (
+        SELECT lctu.lifeComment_id, COUNT(*) thumbsUpCount
+        FROM lifeCommentThumbsUp lctu
+        WHERE lctu.lifeTidings_id = :lifeTidingId
+        GROUP BY lctu.lifeComment_id
+      ) lctuu ON lctuu.lifeComment_id = lctt.id
+      LEFT JOIN (
+        SELECT lctu.lifeComment_id, JSON_CONTAINS(JSON_ARRAYAGG(lctu.user_id), JSON_ARRAY(:userId + 0)) isThumbsUp
+        FROM lifeCommentThumbsUp lctu
+        WHERE lctu.lifeTidings_id = :lifeTidingId
+        GROUP BY lctu.lifeComment_id
+      ) lctuuu ON lctuuu.lifeComment_id = lctt.id
+      WHERE lctt.lifeTidings_id = :lifeTidingId
+      ORDER BY lctt.createAt DESC
+    `
+    const lifeTidingCommentChildrenSelect = `
+      SELECT lctu.id, lctu.lifeComment_id commentId, lctu.from_id fromId, lctu.to_id toId, 
+        ui.nickname fromName, ui.avatar_url fromAvatarUrl, uii.nickname toName, uii.avatar_url toAvatarUrl,
+        lctu.content, lctu.createAt createTime
+      FROM lifeCommentToUser lctu
+      INNER JOIN userInfo ui ON ui.user_id = lctu.from_id
+      INNER JOIN userInfo uii ON uii.user_id = lctu.to_id
+      WHERE lctu.lifeComment_id = :commentId AND lctu.lifeTidings_id = :lifeTidingId
+      ORDER BY lctu.createAt
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      await this.sequelize.query(readingInsert, {
+        replacements: { ...ids },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      const lifeTidingDetailSelectRes = await this.sequelize.query(lifeTidingDetailSelect, {
+        replacements: { ...ids },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const lifeTidingCommentSelectRes: any[] = await this.sequelize.query(lifeTidingCommentSelect, {
+        replacements: { ...ids },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      for (const comment of lifeTidingCommentSelectRes) {
+        const lifeTidingCommentChildrenSelectRes = await this.sequelize.query(lifeTidingCommentChildrenSelect, {
+          replacements: { commentId: comment.id, lifeTidingId: ids.lifeTidingId },
+          type: QueryTypes.SELECT,
+          transaction: t,
+        })
+        comment['children'] = lifeTidingCommentChildrenSelectRes
+      }
+      lifeTidingDetailSelectRes[0]['commentsList'] = lifeTidingCommentSelectRes
+      return lifeTidingDetailSelectRes[0]
+    })
+    return result
+  }
+
+  async commentLifeTidings(info: CommentLifeTidingsInfo) {
+    const commentInsert = `INSERT INTO lifeCommentToTidings (lifeTidings_id, user_id, content) VALUES (:lifeTidingId, :userId, :content)`
+    const tidingSelect = `SELECT user_id userId FROM lifeTidings WHERE id = :lifeTidingId`
+    const messageInsert = `INSERT INTO lifeMessages (user_id, toTiding_id, type) VALUES (:userId, :commentId, 1)`
+    const commentSelect = `
+      SELECT lctt.id, lctt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl,
+        lctt.content, lctt.createAt createTime,
+        IFNULL(lctuu.thumbsUpCount, 0) thumbsUpCount,
+        IFNULL(lctuuu.isThumbsUp, 0) isThumbsUp
+      FROM lifeCommentToTidings lctt
+      INNER JOIN userInfo ui ON ui.user_id = lctt.user_id
+      LEFT JOIN (
+        SELECT lctu.lifeComment_id, COUNT(*) thumbsUpCount
+        FROM lifeCommentThumbsUp lctu
+        WHERE lctu.lifeTidings_id = :lifeTidingId
+        GROUP BY lctu.lifeComment_id
+      ) lctuu ON lctuu.lifeComment_id = lctt.id
+      LEFT JOIN (
+        SELECT lctu.lifeComment_id, JSON_CONTAINS(JSON_ARRAYAGG(lctu.user_id), JSON_ARRAY(:userId + 0)) isThumbsUp
+        FROM lifeCommentThumbsUp lctu
+        WHERE lctu.lifeTidings_id = :lifeTidingId
+        GROUP BY lctu.lifeComment_id
+      ) lctuuu ON lctuuu.lifeComment_id = lctt.id
+      WHERE lctt.lifeTidings_id = :lifeTidingId AND lctt.id = :commentId
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const commentInsertRes = await this.sequelize.query(commentInsert, {
+        replacements: {
+          lifeTidingId: info.lifeTidingId,
+          userId: info.fromId,
+          content: info.content,
+        },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!commentInsertRes[1]) return { status: !!commentInsertRes[1], comment: null }
+      const tidingSelectRes: any[] = await this.sequelize.query(tidingSelect, {
+        replacements: { lifeTidingId: info.lifeTidingId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      let messageInsertRes = true
+      if (tidingSelectRes[0] && tidingSelectRes[0].userId !== info.fromId) {
+        const result = await this.sequelize.query(messageInsert, {
+          replacements: { userId: info.toId, commentId: commentInsertRes[0] },
+          type: QueryTypes.INSERT,
+          transaction: t,
+        })
+        messageInsertRes = messageInsertRes && !!result[1]
+        if (!messageInsertRes) return { status: messageInsertRes, comment: null }
+      }
+      const commentSelectRes = await this.sequelize.query(commentSelect, {
+        replacements: { lifeTidingId: info.lifeTidingId, userId: info.fromId, commentId: commentInsertRes[0] },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      return {
+        status: !!commentInsertRes[1] && messageInsertRes,
+        comment: commentSelectRes[0],
+      }
+    })
+    return result
+  }
+
+  async replyLifeTidings(info: ReplyLifeTidingsInfo) {
+    const commentInsert = `
+      INSERT INTO lifeCommentToUser (lifeTidings_id, lifeComment_id, from_id, to_id, content) VALUES (:lifeTidingId, :lifeCommentId, :fromId, :toId, :content)
+    `
+    const messageInsert = `INSERT INTO lifeMessages (user_id, toUser_id, type) VALUES (:userId, :replyId, 2)`
+    const commentSelect = `
+      SELECT lctu.id, lctu.lifeComment_id commentId, lctu.from_id fromId, lctu.to_id toId, 
+        ui.nickname fromName, ui.avatar_url fromAvatarUrl, uii.nickname toName, 
+        lctu.content, lctu.createAt createTime
+      FROM lifeCommentToUser lctu
+      INNER JOIN userInfo ui ON ui.user_id = lctu.from_id
+      INNER JOIN userInfo uii ON uii.user_id = lctu.to_id
+      WHERE lctu.lifeComment_id = :lifeCommentId AND lctu.lifeTidings_id = :lifeTidingId AND lctu.id = :replyId
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const commentInsertRes = await this.sequelize.query(commentInsert, {
+        replacements: { ...info },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!commentInsertRes[1]) return { status: !!commentInsertRes[1], comment: null }
+      const messageInsertRes = await this.sequelize.query(messageInsert, {
+        replacements: { userId: info.toId, replyId: commentInsertRes[0] },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!messageInsertRes[1]) return { status: !!messageInsertRes[1], comment: null }
+      const commentSelectRes = await this.sequelize.query(commentSelect, {
+        replacements: {
+          lifeTidingId: info.lifeTidingId,
+          lifeCommentId: info.lifeCommentId,
+          replyId: commentInsertRes[0],
+        },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      return {
+        status: !!commentInsertRes[1] && !!messageInsertRes[1],
+        comment: commentSelectRes[0],
+      }
+    })
+    return result
+  }
+
+  async thumbLifeComment(ids: ThumbsUpCommentIds) {
+    const thumbsCommentInsert = `INSERT INTO lifeCommentThumbsUp (lifeTidings_id, lifeComment_id, user_id) VALUES (:lifeTidingId, :lifeCommentId, :userId)`
+    const result = await this.sequelize.query(thumbsCommentInsert, {
+      replacements: { ...ids },
+      type: QueryTypes.INSERT,
+    })
+    return !!result[1]
+  }
+
+  async cancelthumbLifeComment(ids: ThumbsUpCommentIds) {
+    const thumbsCommentDelete = `DELETE FROM lifeCommentThumbsUp WHERE lifeTidings_id = :lifeTidingId AND lifeComment_id = :lifeCommentId AND user_id = :userId`
+    await this.sequelize.query(thumbsCommentDelete, {
+      replacements: { ...ids },
+      type: QueryTypes.DELETE,
+    })
+    return true
+  }
+
+  async getHotBaseLifeTidingsList() {
+    const tidingsList = `
+      SELECT id, title, readings 
+      FROM lifeTidings
+      ORDER BY readings DESC
+      LIMIT 10
+    `
+    const result: any = await this.sequelize.query(tidingsList, {
+      type: QueryTypes.SELECT,
     })
     return result
   }

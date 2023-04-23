@@ -37,3 +37,43 @@ export interface GetMessageListId {
 export interface GetCollectionListId {
   userId: string
 }
+
+export interface ThumbsUpLifeTidingsIds {
+  lifeTidingId: number
+  userId: number
+}
+
+export interface CollectLifeTidingsIds {
+  lifeTidingId: number
+  userId: number
+}
+
+export interface DeleteLifeTidingsId {
+  lifeTidingId: number
+}
+
+export interface LifeTidingDetailId {
+  lifeTidingId: string
+  userId: string
+}
+
+export interface CommentLifeTidingsInfo {
+  lifeTidingId: number
+  fromId: number
+  toId: number
+  content: string
+}
+
+export interface ReplyLifeTidingsInfo {
+  lifeTidingId: number
+  lifeCommentId: number
+  fromId: number
+  toId: number
+  content: string
+}
+
+export interface ThumbsUpCommentIds {
+  lifeTidingId: number
+  lifeCommentId: number
+  userId: number
+}
