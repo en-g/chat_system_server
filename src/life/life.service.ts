@@ -4,6 +4,7 @@ import {
   CollectLifeTidingsIds,
   CommentLifeTidingsInfo,
   DeleteLifeTidingsId,
+  FansListId,
   GetCollectionListId,
   GetMessageListId,
   GetNewLifeTidingsListId,
@@ -11,8 +12,10 @@ import {
   GetUserCenterInfo,
   GetUserLifeTidingsListId,
   GetUserLifeTidingsListInfo,
+  LifeMessageCountId,
   LifeTidingDetailId,
   LifeTidingsInfo,
+  RegardUserIds,
   ReplyLifeTidingsInfo,
   ThumbsUpCommentIds,
   ThumbsUpLifeTidingsIds,
@@ -395,6 +398,7 @@ export class LifeService {
     INNER JOIN userInfo ui ON ui.user_id = lctt.user_id
     INNER JOIN lifeTidings lt ON lt.id = lctt.lifeTidings_id
     WHERE lm.user_id = :userId
+    ORDER BY lm.createAt DESC
     `
     const messageListSelect2 = `
       SELECT lm.id, lctu.lifeTidings_id lifeTidingId, lt.title, lm.user_id fromId, 
@@ -405,7 +409,18 @@ export class LifeService {
       INNER JOIN userInfo ui ON ui.user_id = lctu.from_id
       INNER JOIN lifeTidings lt ON lt.id = lctu.lifeTidings_id
       WHERE lm.user_id = :userId
+      ORDER BY lm.createAt DESC
     `
+    const messageListSelect3 = `
+      SELECT lm.id, ui.user_id fromId, ui.nickname fromName, ui.avatar_url fromAvatarUrl, 
+        lm.type, lm.createAt createTime
+      FROM lifeMessages lm
+      INNER JOIN lifeRegards lr ON lr.id = lm.lifeRegard_id AND lm.user_id = lr.regard_id
+      INNER JOIN userInfo ui ON ui.user_id = lr.user_id
+      WHERE lm.user_id = :userId
+      ORDER BY lm.createAt DESC
+    `
+    const messageListDelete = `DELETE FROM lifeMessages WHERE user_id = :userId`
     const result = await this.sequelize.transaction(async (t) => {
       const messageListSelect1Res = await this.sequelize.query(messageListSelect1, {
         replacements: { ...id },
@@ -417,7 +432,17 @@ export class LifeService {
         type: QueryTypes.SELECT,
         transaction: t,
       })
-      messageListSelect1Res.push(...messageListSelect2Res)
+      const messageListSelect3Res = await this.sequelize.query(messageListSelect3, {
+        replacements: { ...id },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      await this.sequelize.query(messageListDelete, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      messageListSelect1Res.push(...messageListSelect2Res, ...messageListSelect3Res)
       return messageListSelect1Res
     })
     return result
@@ -795,6 +820,58 @@ export class LifeService {
       LIMIT 10
     `
     const result: any = await this.sequelize.query(tidingsList, {
+      type: QueryTypes.SELECT,
+    })
+    return result
+  }
+
+  async getLifeMessageCount(id: LifeMessageCountId) {
+    const lifeMessageCountSelect = `SELECT COUNT(*) messageCount FROM lifeMessages WHERE user_id = :userId`
+    const result: any = await this.sequelize.query(lifeMessageCountSelect, {
+      replacements: { ...id },
+      type: QueryTypes.SELECT,
+    })
+    return result[0]
+  }
+
+  async regardUser(ids: RegardUserIds) {
+    const regardUserInsert = `INSERT INTO lifeRegards (user_id, regard_id) VALUES (:userId, :regardId)`
+    const lifeMessageInsert = `INSERT INTO lifeMessages (user_id, lifeRegard_id, type) VALUES (:userId, :lifeRegardId, 3)`
+    const result = await this.sequelize.transaction(async (t) => {
+      const regardUserInsertRes = await this.sequelize.query(regardUserInsert, {
+        replacements: { ...ids },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!regardUserInsertRes[1]) return false
+      const lifeMessageInsertRes = await this.sequelize.query(lifeMessageInsert, {
+        replacements: { userId: ids.regardId, lifeRegardId: regardUserInsertRes[0] },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      return !!regardUserInsertRes[1] && !!lifeMessageInsertRes[1]
+    })
+    return result
+  }
+
+  async cancelRegardUser(ids: RegardUserIds) {
+    const regardUserDelete = `DELETE FROM lifeRegards WHERE user_id = :userId AND regard_id = :regardId`
+    await this.sequelize.query(regardUserDelete, {
+      replacements: { ...ids },
+      type: QueryTypes.DELETE,
+    })
+    return true
+  }
+
+  async getFansList(id: FansListId) {
+    const regardsListSelect = `
+      SELECT lr.id, lr.regard_id userId, ui.nickname name, ui.signature signature, ui.avatar_url avatarUrl
+      FROM lifeRegards lr
+      INNER JOIN userInfo ui ON ui.user_id = lr.user_id
+      WHERE lr.regard_id = :userId
+    `
+    const result: any = await this.sequelize.query(regardsListSelect, {
+      replacements: { ...id },
       type: QueryTypes.SELECT,
     })
     return result

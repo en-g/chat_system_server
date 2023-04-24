@@ -35,3 +35,7 @@ export interface SendPyqTidingsCommentInfo {
   toId?: number
   content: string
 }
+
+export interface GetPyqMessaegesListId {
+  userId: string
+}

@@ -180,3 +180,15 @@ export class ChatMessageInfo {
   @IsBoolean()
   isContact: boolean
 }
+
+export class UpdateLifeMessageCountId {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class UpdatePyqMessageCountId {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}

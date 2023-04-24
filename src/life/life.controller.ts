@@ -3,6 +3,7 @@ import {
   CollectLifeTidingsIds,
   CommentLifeTidingsInfo,
   DeleteLifeTidingsId,
+  FansListId,
   GetCollectionListId,
   GetMessageListId,
   GetNewLifeTidingsListId,
@@ -10,8 +11,10 @@ import {
   GetUserCenterInfo,
   GetUserLifeTidingsListId,
   GetUserLifeTidingsListInfo,
+  LifeMessageCountId,
   LifeTidingDetailId,
   LifeTidingsInfo,
+  RegardUserIds,
   ReplyLifeTidingsInfo,
   ThumbsUpCommentIds,
   ThumbsUpLifeTidingsIds,
@@ -134,5 +137,29 @@ export class LifeController {
   @Get('list/hot/base')
   async getHotBaseLifeTidingsList() {
     return await this.lifeService.getHotBaseLifeTidingsList()
+  }
+
+  // 获取消息数
+  @Get('messages/count/:userId')
+  async getLifeMessageCount(@Param() id: LifeMessageCountId) {
+    return await this.lifeService.getLifeMessageCount(id)
+  }
+
+  // 关注
+  @Post('regard')
+  async regardUser(@Body() ids: RegardUserIds) {
+    return await this.lifeService.regardUser(ids)
+  }
+
+  // 取消关注
+  @Delete('regard')
+  async cancelRegardUser(@Body() ids: RegardUserIds) {
+    return await this.lifeService.cancelRegardUser(ids)
+  }
+
+  // 获取粉丝列表
+  @Get('fans/list/:userId')
+  async getFansList(@Param() id: FansListId) {
+    return await this.lifeService.getFansList(id)
   }
 }

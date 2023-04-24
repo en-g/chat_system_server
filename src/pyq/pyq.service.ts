@@ -4,6 +4,7 @@ import { Sequelize } from 'sequelize-typescript'
 import {
   DeletePyqTidingsId,
   FriendPyqTidingsListInfo,
+  GetPyqMessaegesListId,
   PyqTidingsInfo,
   PyqTidingsListId,
   PyqTidingsListPage,
@@ -73,6 +74,9 @@ export class PyqService {
     const result: any[] = await this.sequelize.query(pyqTidingsListSelect, {
       replacements: { ...id },
       type: QueryTypes.SELECT,
+    })
+    result.forEach((item) => {
+      item.comments = item.comments.reverse()
     })
     return {
       total: result.length,
@@ -206,11 +210,30 @@ export class PyqService {
 
   async thumsUpTiding(ids: ThumbsUpPyqTidingsIds) {
     const tidingsThumbsUpInsert = `INSERT INTO pyqTidingsThumbsUp (pyqTidings_id, user_id) VALUES (:pyqTidingId, :userId)`
-    const result = await this.sequelize.query(tidingsThumbsUpInsert, {
-      replacements: { ...ids },
-      type: QueryTypes.INSERT,
+    const tidingSelect = `SELECT user_id userId FROM pyqTidings WHERE id = :pyqTidingId`
+    const pyqMessageInsert = `INSERT INTO pyqMessages (user_id, thumbsUp_id, type) VALUES (:userId, :thumbsUpId, 3)`
+    const result = await this.sequelize.transaction(async (t) => {
+      const tidingsThumbsUpInsertRes = await this.sequelize.query(tidingsThumbsUpInsert, {
+        replacements: { ...ids },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+      if (!tidingsThumbsUpInsertRes[1]) return false
+      const tidingSelectRes: any[] = await this.sequelize.query(tidingSelect, {
+        replacements: { pyqTidingId: ids.pyqTidingId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      if (tidingSelectRes[0] && tidingSelectRes[0].userId !== ids.userId) {
+        await this.sequelize.query(pyqMessageInsert, {
+          replacements: { userId: tidingSelectRes[0].userId, thumbsUpId: tidingsThumbsUpInsertRes[0] },
+          type: QueryTypes.INSERT,
+          transaction: t,
+        })
+      }
+      return !!tidingsThumbsUpInsertRes[1]
     })
-    return !!result[1]
+    return result
   }
 
   async cancleThumsUpTiding(ids: ThumbsUpPyqTidingsIds) {
@@ -225,24 +248,98 @@ export class PyqService {
   async sendTidingComment(info: SendPyqTidingsCommentInfo) {
     const toTidingCommentInsert = `INSERT INTO pyqComments (pyqTidings_id, user_id, content) VALUES (:pyqTidingId, :userId, :content)`
     const toUserCommentInsert = `INSERT INTO pyqComments (pyqTidings_id, user_id, to_id, content) VALUES (:pyqTidingId, :userId, :toId, :content)`
+    const tidingSelect = `SELECT user_id userId FROM pyqTidings WHERE id = :pyqTidingId`
+    const toTidingMessageInsert = `INSERT INTO pyqMessages (user_id, comment_id, type) VALUES (:userId, :commentId, 1)`
+    const toUserMessageInsert = `INSERT INTO pyqMessages (user_id, comment_id, type) VALUES (:userId, :commentId, 2)`
     if (info.toId) {
-      const result = await this.sequelize.query(toUserCommentInsert, {
-        replacements: { ...info },
-        type: QueryTypes.INSERT,
+      const result = await this.sequelize.transaction(async (t) => {
+        const toUserCommentInsertRes = await this.sequelize.query(toUserCommentInsert, {
+          replacements: { ...info },
+          type: QueryTypes.INSERT,
+          transaction: t,
+        })
+        if (!toUserCommentInsertRes[1]) return { status: !!toUserCommentInsertRes[1], id: toUserCommentInsertRes[0] }
+        const toUserMessageInsertRes = await this.sequelize.query(toUserMessageInsert, {
+          replacements: { userId: info.toId, commentId: toUserCommentInsertRes[0] },
+          type: QueryTypes.INSERT,
+          transaction: t,
+        })
+        return { status: !!toUserCommentInsertRes[1] && !!toUserMessageInsertRes[1], id: toUserCommentInsertRes[0] }
       })
-      return {
-        status: !!result[1],
-        id: result[0],
-      }
+      return result
     } else {
-      const result = await this.sequelize.query(toTidingCommentInsert, {
-        replacements: { ...info },
-        type: QueryTypes.INSERT,
+      const result = await this.sequelize.transaction(async (t) => {
+        const toTidingCommentInsertRes = await this.sequelize.query(toTidingCommentInsert, {
+          replacements: { ...info },
+          type: QueryTypes.INSERT,
+        })
+        if (!toTidingCommentInsert[1]) return { status: !!toTidingCommentInsert[1], id: toTidingCommentInsert[0] }
+        const tidingSelectRes: any[] = await this.sequelize.query(tidingSelect, {
+          replacements: { pyqTidingId: info.pyqTidingId },
+          type: QueryTypes.SELECT,
+          transaction: t,
+        })
+        if (tidingSelectRes[0] && tidingSelectRes[0].userId !== info.userId) {
+          await this.sequelize.query(toTidingMessageInsert, {
+            replacements: { userId: tidingSelectRes[0].userId, commentId: toTidingCommentInsertRes[0] },
+            type: QueryTypes.INSERT,
+            transaction: t,
+          })
+        }
+        return { status: !!toTidingCommentInsert[1], id: toTidingCommentInsert[0] }
       })
-      return {
-        status: !!result[1],
-        id: result[0],
-      }
+      return result
     }
+  }
+
+  async getPyqMessagesList(id: GetPyqMessaegesListId) {
+    const commentMessagesSelect = `
+      SELECT pm.id, pc.pyqTidings_id pyqTidingsId, ui.user_id fromId, ui.nickname fromName, ui.avatar_url fromAvatarUrl, 
+        pc.content, pt.content title, pm.type, pm.createAt createTime
+      FROM pyqMessages pm 
+      INNER JOIN pyqComments pc ON pc.id = pm.comment_id
+      INNER JOIN pyqTidings pt on pt.id = pc.pyqTidings_id
+      INNER JOIN userInfo ui ON ui.user_id = pc.user_id
+      WHERE pm.user_id = :userId
+    `
+    const thumbsUpMessagesSelect = `
+      SELECT pm.id, pttu.pyqTidings_id pyqTidingsId, ui.user_id fromId, ui.nickname fromName, ui.avatar_url fromAvatarUrl, 
+        pt.content title, pm.type, pm.createAt createTime
+      FROM pyqMessages pm
+      INNER JOIN pyqTidingsThumbsUp pttu ON pttu.id = pm.thumbsUp_id
+      INNER JOIN pyqTidings pt ON pt.id = pttu.pyqTidings_id
+      INNER JOIN userInfo ui ON ui.user_id = pttu.user_id
+      WHERE pm.user_id = :userId
+    `
+    const messageDelete = `DELETE FROM pyqMessages WHERE user_id = :userId`
+    const result = await this.sequelize.transaction(async (t) => {
+      const commentMessagesSelectRes = await this.sequelize.query(commentMessagesSelect, {
+        replacements: { ...id },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const thumbsUpMessagesSelectRes = await this.sequelize.query(thumbsUpMessagesSelect, {
+        replacements: { ...id },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      await this.sequelize.query(messageDelete, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      commentMessagesSelectRes.push(...thumbsUpMessagesSelectRes)
+      return commentMessagesSelectRes
+    })
+    return result
+  }
+
+  async getPyqMessagesCount(id: GetPyqMessaegesListId) {
+    const messageCountSelect = `SELECT COUNT(*) messageCount FROM pyqMessages WHERE user_id = :userId`
+    const result = await this.sequelize.query(messageCountSelect, {
+      replacements: { ...id },
+      type: QueryTypes.SELECT,
+    })
+    return result[0]
   }
 }

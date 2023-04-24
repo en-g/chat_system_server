@@ -14,6 +14,8 @@ import {
   InviteGroupApplication,
   UpdateContactListId,
   UpdateGroupListId,
+  UpdateLifeMessageCountId,
+  UpdatePyqMessageCountId,
 } from './dto/websocket.dto'
 import { WebsocketService } from './websocket.service'
 import { MessageService } from '../message/message.service'
@@ -264,6 +266,26 @@ export class WebsocketGateway {
         message: info.message,
         url: info.url,
       })
+    }
+  }
+
+  // 更新生活圈消息数
+  @SubscribeMessage('updateLifeMessageCount')
+  async onUpdateLifeMessageCount(@MessageBody() id: UpdateLifeMessageCountId) {
+    // 对方在线，就通知对方更新生活圈消息数
+    const client = Object.values(this.clients).find((client) => client.userId === id.userId)
+    if (client) {
+      client.socket.emit('updateLifeMessageCount')
+    }
+  }
+
+  // 更新朋友圈消息数
+  @SubscribeMessage('updatePyqMessageCount')
+  async onUpdatePyqMessageCount(@MessageBody() id: UpdatePyqMessageCountId) {
+    // 对方在线，就通知对方更新生活圈消息数
+    const client = Object.values(this.clients).find((client) => client.userId === id.userId)
+    if (client) {
+      client.socket.emit('updatePyqMessageCount')
     }
   }
 

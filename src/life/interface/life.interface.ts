@@ -77,3 +77,16 @@ export interface ThumbsUpCommentIds {
   lifeCommentId: number
   userId: number
 }
+
+export interface LifeMessageCountId {
+  userId: string
+}
+
+export interface RegardUserIds {
+  userId: number
+  regardId: number
+}
+
+export interface FansListId {
+  userId: string
+}

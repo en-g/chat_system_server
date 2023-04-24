@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport'
 import {
   DeletePyqTidingsId,
   FriendPyqTidingsListInfo,
+  GetPyqMessaegesListId,
   PyqTidingsInfo,
   PyqTidingsListId,
   PyqTidingsListPage,
@@ -56,5 +57,17 @@ export class PyqController {
   @Post('comment')
   async sendTidingComment(@Body() info: SendPyqTidingsCommentInfo) {
     return await this.pyqService.sendTidingComment(info)
+  }
+
+  // 获取朋友圈消息列表
+  @Get('messages/list/:userId')
+  async getPyqMessagesList(@Param() id: GetPyqMessaegesListId) {
+    return await this.pyqService.getPyqMessagesList(id)
+  }
+
+  // 获取朋友圈消息数
+  @Get('messages/count/:userId')
+  async getPyqMessagesCount(@Param() id: GetPyqMessaegesListId) {
+    return await this.pyqService.getPyqMessagesCount(id)
   }
 }

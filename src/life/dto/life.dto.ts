@@ -169,3 +169,25 @@ export class ThumbsUpCommentIds {
   @IsNumber()
   userId: number
 }
+
+export class LifeMessageCountId {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+}
+
+export class RegardUserIds {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  regardId: number
+}
+
+export class FansListId {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+}

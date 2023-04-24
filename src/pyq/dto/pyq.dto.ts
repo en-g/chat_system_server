@@ -81,3 +81,9 @@ export class SendPyqTidingsCommentInfo {
   @IsString()
   content: string
 }
+
+export class GetPyqMessaegesListId {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+}
