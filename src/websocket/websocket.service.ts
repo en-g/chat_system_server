@@ -91,4 +91,63 @@ export class WebsocketService {
     }
     return result[0]
   }
+
+  async updateUserLatestOnlineTime(userId: number) {
+    const latestOnlineTimeDelete = `DELETE FROM latestOnlineTime WHERE user_id = :userId`
+    const latestOnlineTimeInsert = `INSERT INTO latestOnlineTime (user_id) VALUES (:userId)`
+    await this.sequelize.transaction(async (t) => {
+      await this.sequelize.query(latestOnlineTimeDelete, {
+        replacements: { userId },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      await this.sequelize.query(latestOnlineTimeInsert, {
+        replacements: { userId },
+        type: QueryTypes.INSERT,
+        transaction: t,
+      })
+    })
+  }
+
+  async getOfflineChatMessage(userId: number) {
+    const latestOnlineTimeSelect = `SELECT createAt onlineTime FROM latestOnlineTime WHERE user_id = :userId`
+    const offlineFriendChatMessageSelect = `
+      SELECT fcm.id, fcm.from_id fromId, fcm.to_id toId, 
+        fcm.type, fcm.message, fcm.url, fcm.createAt createTime
+      FROM friendChatMessages fcm
+      WHERE fcm.to_id = :userId AND fcm.createAt >= :onlineTime
+      ORDER BY fcm.createAt
+    `
+    const offlineGroupChatMessageSelect = `
+      SELECT gcm.id, gcm.group_id groupId, gcm.send_id fromId, 
+        gcm.type, gcm.message, gcm.url, gcm.createAt createTime
+      FROM groupChatMessages gcm
+      INNER JOIN user_group ug ON ug.group_id = gcm.group_id
+      WHERE ug.user_id = :userId AND gcm.createAt >= :onlineTime
+      ORDER BY gcm.createAt
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const latestOnlineTimeSelectRes: any[] = await this.sequelize.query(latestOnlineTimeSelect, {
+        replacements: { userId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      if (latestOnlineTimeSelectRes.length === 0) return {}
+      const offlineFriendChatMessageSelectRes = await this.sequelize.query(offlineFriendChatMessageSelect, {
+        replacements: { userId, onlineTime: latestOnlineTimeSelectRes[0].onlineTime },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const offlineGroupChatMessageSelectRes = await this.sequelize.query(offlineGroupChatMessageSelect, {
+        replacements: { userId, onlineTime: latestOnlineTimeSelectRes[0].onlineTime },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      return {
+        contact: offlineFriendChatMessageSelectRes,
+        group: offlineGroupChatMessageSelectRes,
+      }
+    })
+    return result
+  }
 }

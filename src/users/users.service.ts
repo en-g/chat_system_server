@@ -1,4 +1,4 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { PersonalInfo, PersonalInfoId, UserLogin } from './interface/users.interface'
@@ -32,7 +32,7 @@ export class UsersService {
       INNER JOIN userInfo ui ON ui.user_id = u.id
       WHERE u.id = :userId
     `
-    const result = await this.sequelize.query(personalInfoSelect, {
+    const result: any[] = await this.sequelize.query(personalInfoSelect, {
       replacements: { ...id },
       type: QueryTypes.SELECT,
     })

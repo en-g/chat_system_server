@@ -32,7 +32,7 @@ export class WebsocketGateway {
 
   // 客户端连接
   @SubscribeMessage('connection')
-  onClientConnect(@ConnectedSocket() client: any, @MessageBody() id: ClientId) {
+  async onClientConnect(@ConnectedSocket() client: any, @MessageBody() id: ClientId) {
     console.log(`${id.userId} ${client.id} 连接成功！`)
     this.clients[client.id] = {
       userId: id.userId,
@@ -40,10 +40,20 @@ export class WebsocketGateway {
       isConnect: true,
     }
 
+    // 更新最后在线时间
+    await this.websocketService.updateUserLatestOnlineTime(id.userId)
+
+    // 推送聊天消息
+    const offlineChatMessages = await this.websocketService.getOfflineChatMessage(id.userId)
+    client.emit('offlineChatMessages', offlineChatMessages)
+
     // 客户端断开连接
-    client.on('disconnect', () => {
+    client.on('disconnect', async () => {
       Reflect.deleteProperty(this.clients, client.id)
       console.log(`${id.userId} ${client.id} 断开连接！`)
+
+      // 更新最后在线时间
+      await this.websocketService.updateUserLatestOnlineTime(id.userId)
     })
 
     // this.heartbeatToClient()
@@ -226,46 +236,48 @@ export class WebsocketGateway {
 
   // 聊天
   @SubscribeMessage('chat')
-  async onChat(@MessageBody() info: ChatMessageInfo) {
+  async onChat(@ConnectedSocket() client: any, @MessageBody() info: ChatMessageInfo) {
     if (info.isContact) {
       // 如果是联系人之间的聊天
-      // 对方在线，就将消息转发过去
-      for (const cliendId of Object.keys(this.clients)) {
-        if (this.clients[cliendId].userId === info.toId) {
-          this.clients[cliendId].socket.emit('chat', info)
-          break
-        }
-      }
       // 保存消息
-      this.messageService.saveContactChatMessage({
+      const { status, chatMessage } = await this.messageService.saveContactChatMessage({
         fromId: info.fromId,
         toId: info.toId,
         type: info.type,
         message: info.message,
         url: info.url,
       })
+      if (status === 0) return
+      // 对方在线，就将消息转发过去
+      client.emit('chat', Object.assign(chatMessage, { isContact: info.isContact }))
+      const toClient = Object.values(this.clients).find((c) => c.userId === info.toId)
+      if (toClient) {
+        console.log(toClient.userId)
+        toClient.socket.emit('chat', Object.assign(chatMessage, { isContact: info.isContact }))
+      }
     } else {
       // 如果是群聊的聊天
-      // 遍历群所有的成员，对在线的成员进行转发
-      const members = this.groups[info.groupId]
-      if (members) {
-        members.forEach((id: number) => {
-          if (id === info.fromId) return
-          const client = Object.values(this.clients).find((client) => client.userId === id)
-          if (client) {
-            client.socket.emit('chat', info)
-          }
-        })
-      }
-
       // 保存消息
-      this.messageService.saveGroupChatMessage({
+      const { status, chatMessage } = await this.messageService.saveGroupChatMessage({
         groupId: info.groupId,
         sendId: info.fromId,
         type: info.type,
         message: info.message,
         url: info.url,
       })
+      if (status === 0) return
+      // 遍历群所有的成员，对在线的成员进行转发
+      client.emit('chat', Object.assign(chatMessage, { isContact: info.isContact }))
+      const members = this.groups[info.groupId]
+      if (members) {
+        members.forEach((id: number) => {
+          if (id === info.fromId) return
+          const client = Object.values(this.clients).find((client) => client.userId === id)
+          if (client) {
+            client.socket.emit('chat', Object.assign(chatMessage, { isContact: info.isContact }))
+          }
+        })
+      }
     }
   }
 
