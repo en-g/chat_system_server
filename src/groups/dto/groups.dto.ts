@@ -16,6 +16,20 @@ export class GroupInfoIds {
   groupId: string
 }
 
+export class UpdateGroupNameInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  name: string
+}
+
 export class UpdateGroupRemarksInfo {
   @IsNotEmpty()
   @IsNumber()
@@ -28,6 +42,20 @@ export class UpdateGroupRemarksInfo {
   @IsNotEmpty()
   @IsString()
   remarks: string
+}
+
+export class UpdateGroupNoticeInfo {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
+  @IsNotEmpty()
+  @IsString()
+  notice: string
 }
 
 export class AgreeAddGropId {

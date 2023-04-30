@@ -9,6 +9,7 @@ import {
   GetAllContactInfo,
   RefuseAddContactInfo,
   SearchFriendAndGroupsByKeyword,
+  SearchFriendsGroupsListInfo,
   UpdateFriendRemarksInfo,
 } from './dto/friends.dto'
 import { FriendsService } from './friends.service'
@@ -70,5 +71,11 @@ export class FriendsController {
   @Get('about/list')
   async getContactListAboutGroup(@Query() ids: ContactListAboutGroup) {
     return await this.friendsService.getContactListAboutGroup(ids)
+  }
+
+  // 获取联系人和群聊列表
+  @Get('/groups/added/search')
+  async searchFriendGroupsList(@Query() info: SearchFriendsGroupsListInfo) {
+    return await this.friendsService.searchFriendGroupsList(info)
   }
 }

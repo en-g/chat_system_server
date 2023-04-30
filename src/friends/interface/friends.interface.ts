@@ -41,3 +41,8 @@ export interface ContactListAboutGroup {
   userId: string
   groupId: string
 }
+
+export interface SearchFriendsGroupsListInfo {
+  userId: string
+  keyword: string
+}

@@ -1,6 +1,7 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 import {
   AddContactApplication,
+  AddContactSuccess,
   AddGroupApplication,
   ChatMessageInfo,
   ClientId,
@@ -13,6 +14,7 @@ import {
   GroupsMembers,
   InviteGroupApplication,
   UpdateContactListId,
+  UpdateGroupInfoId,
   UpdateGroupListId,
   UpdateLifeMessageCountId,
   UpdatePyqMessageCountId,
@@ -23,10 +25,7 @@ import { MessageService } from '../message/message.service'
 @WebSocketGateway(3002, { cors: true })
 export class WebsocketGateway {
   clients: Clients = {}
-  groups: GroupsMembers = {
-    1: [1, 2], // 测试
-    7: [1],
-  }
+  groups: GroupsMembers = {}
   heartbeatTimer: any = null
   constructor(private readonly websocketService: WebsocketService, private readonly messageService: MessageService) {}
 
@@ -39,9 +38,6 @@ export class WebsocketGateway {
       socket: client,
       isConnect: true,
     }
-
-    // 更新最后在线时间
-    await this.websocketService.updateUserLatestOnlineTime(id.userId)
 
     // 推送聊天消息
     const offlineChatMessages = await this.websocketService.getOfflineChatMessage(id.userId)
@@ -59,6 +55,11 @@ export class WebsocketGateway {
     // this.heartbeatToClient()
   }
 
+  // 初始化群的成员id
+  async initGroupMemberIds() {
+    await this.websocketService.initGroupMemberIds(this.groups)
+  }
+
   // 添加联系人
   @SubscribeMessage('addContact')
   async onAddContact(@MessageBody() info: AddContactApplication) {
@@ -71,6 +72,23 @@ export class WebsocketGateway {
           break
         }
       }
+    }
+  }
+
+  // 添加联系人成功
+  @SubscribeMessage('addContactSuccess')
+  async onAddContactSuccess(@MessageBody() ids: AddContactSuccess) {
+    const result = await this.websocketService.initContactChatMessage(ids)
+    // 双方有人在线的话，就将打招呼的聊天消息推送过去
+    const fromClient = Object.values(this.clients).find((client) => client.userId === ids.fromId)
+    if (fromClient) {
+      fromClient.socket.emit('chat', Object.assign(result.from, { isContact: true }))
+      fromClient.socket.emit('chat', Object.assign(result.to, { isContact: true }))
+    }
+    const toClient = Object.values(this.clients).find((client) => client.userId === ids.toId)
+    if (toClient) {
+      toClient.socket.emit('chat', Object.assign(result.from, { isContact: true }))
+      toClient.socket.emit('chat', Object.assign(result.to, { isContact: true }))
     }
   }
 
@@ -210,6 +228,11 @@ export class WebsocketGateway {
     if (members) {
       members.includes(info.userId) || members.push(info.userId)
     }
+    const result = await this.websocketService.initGroupChatMessage(info)
+    this.groups[info.groupId].forEach((id: number) => {
+      const client = Object.values(this.clients).find((client) => client.userId === id)
+      client && client.socket.emit('chat', Object.assign(result, { isContact: false }))
+    })
   }
 
   // 更新联系人列表
@@ -232,6 +255,14 @@ export class WebsocketGateway {
         break
       }
     }
+  }
+
+  // 更新群聊信息
+  @SubscribeMessage('updateGroupInfo')
+  async onUpdateGroupInfo(@MessageBody() id: UpdateGroupInfoId) {
+    const client = Object.values(this.clients).find((client) => client.userId === id.userId)
+    console.log(client.userId)
+    client && client.socket.emit('updateGroupInfo', { groupId: id.groupId })
   }
 
   // 聊天

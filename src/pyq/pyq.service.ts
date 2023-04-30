@@ -22,7 +22,6 @@ export class PyqService {
         pt.id, pt.user_id userId, ui.nickname, ui.avatar_url avatarUrl, pt.content, 
         pt.createAt createTime, IF(pttt.isThumbsUp, 1, 0) isThumbsUp,
         IFNULL(ptif.pictures, JSON_ARRAY()) pictures, 
-	      IFNULL(pcuif.comments, JSON_ARRAY()) comments, 
 	      IFNULL(pttui.thumbs, JSON_ARRAY()) thumbs
       FROM pyqTidings pt
       INNER JOIN userInfo ui ON ui.user_id = pt.user_id
@@ -34,21 +33,6 @@ export class PyqService {
         INNER JOIN files f ON f.id = pti.file_id
         GROUP BY pti.pyqTidings_id
       ) ptif ON ptif.pyqTidings_id = pt.id
-      LEFT JOIN (
-        SELECT pc.pyqTidings_id, JSON_ARRAYAGG(
-          JSON_OBJECT(
-            'id', pc.id, 'userId', pc.user_id, 'toId', pc.to_id, 
-            'fromName', ui.nickname, 'toName', uii.nickname, 'content', pc.content
-          )
-        ) comments
-        FROM pyqComments pc 
-        INNER JOIN userInfo ui ON ui.user_id = pc.user_id
-        LEFT JOIN userInfo uii ON uii.user_id = pc.to_id
-        WHERE pc.user_id = :userId OR pc.user_id IN (
-          SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
-        )
-        GROUP BY pc.pyqTidings_id
-      ) pcuif ON pcuif.pyqTidings_id = pt.id
       LEFT JOIN (
         SELECT ptt.pyqTidings_id, JSON_ARRAYAGG(
           JSON_OBJECT('userId', ptt.user_id, 'nickname', ui.nickname)
@@ -71,12 +55,31 @@ export class PyqService {
       )
       ORDER BY pt.createAt DESC
     `
-    const result: any[] = await this.sequelize.query(pyqTidingsListSelect, {
-      replacements: { ...id },
-      type: QueryTypes.SELECT,
-    })
-    result.forEach((item) => {
-      item.comments = item.comments.reverse()
+    const commentSelect = `
+      SELECT pc.id, pc.user_id userId, pc.to_id toId, ui.nickname fromName, uii.nickname toName, pc.content
+      FROM pyqComments pc
+      INNER JOIN userInfo ui ON ui.user_id = pc.user_id
+      LEFT JOIN userInfo uii ON uii.user_id = pc.to_id
+      WHERE (pc.user_id = :userId OR pc.user_id IN (
+        SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
+      )) AND pc.pyqTidings_id = :pyqTidingsId
+			ORDER BY pc.createAt
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const pyqTidingsListSelectRes: any[] = await this.sequelize.query(pyqTidingsListSelect, {
+        replacements: { ...id },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      for (const tiding of pyqTidingsListSelectRes) {
+        const commentSelectRes = await this.sequelize.query(commentSelect, {
+          replacements: { userId: id.userId, pyqTidingsId: tiding.id },
+          type: QueryTypes.SELECT,
+          transaction: t,
+        })
+        tiding['comments'] = commentSelectRes
+      }
+      return pyqTidingsListSelectRes
     })
     return {
       total: result.length,

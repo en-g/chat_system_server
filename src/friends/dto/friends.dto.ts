@@ -85,3 +85,13 @@ export class ContactListAboutGroup {
   @IsNumberString()
   groupId: string
 }
+
+export class SearchFriendsGroupsListInfo {
+  @IsNotEmpty()
+  @IsNumberString()
+  userId: string
+
+  @IsNotEmpty()
+  @IsString()
+  keyword: string
+}

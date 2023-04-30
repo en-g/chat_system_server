@@ -8,6 +8,8 @@ import {
   GroupInfoIds,
   GroupsListId,
   RefuseAddGropId,
+  UpdateGroupNameInfo,
+  UpdateGroupNoticeInfo,
   UpdateGroupRemarksInfo,
 } from './dto/groups.dto'
 import { GroupsService } from './groups.service'
@@ -29,10 +31,22 @@ export class GroupsController {
     return await this.groupsService.getGroupInfo(ids)
   }
 
+  // 修改群聊名称
+  @Put('name')
+  async updateGroupName(@Body() info: UpdateGroupNameInfo) {
+    return await this.groupsService.updateGroupName(info)
+  }
+
   // 修改用户的群聊群昵称
   @Put('remarks')
   async updateGroupRemarks(@Body() info: UpdateGroupRemarksInfo) {
     return await this.groupsService.updateGroupRemarks(info)
+  }
+
+  // 修改群聊公告
+  @Put('notice')
+  async updateGroupNotice(@Body() info: UpdateGroupNoticeInfo) {
+    return await this.groupsService.updateGroupNotice(info)
   }
 
   // 同意进群(用户同意/群主同意)

@@ -46,6 +46,16 @@ export class AddContactApplication {
   remarks?: string
 }
 
+export interface AddContactSuccess {
+  fromId: number
+  toId: number
+}
+
+export interface EnterGroupSuccess {
+  userId: number
+  groupId: number
+}
+
 export class DeleteContactApplication {
   @IsNotEmpty()
   @IsNumber()
@@ -146,6 +156,16 @@ export class UpdateContactListId {
 }
 
 export class UpdateGroupListId {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+}
+
+export class UpdateGroupInfoId {
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number
+
   @IsNotEmpty()
   @IsNumber()
   userId: number

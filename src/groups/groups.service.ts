@@ -9,6 +9,8 @@ import {
   GroupInfoIds,
   GroupsListId,
   RefuseAddGropId,
+  UpdateGroupNameInfo,
+  UpdateGroupNoticeInfo,
   UpdateGroupRemarksInfo,
 } from './interface/groups.interface'
 
@@ -103,12 +105,30 @@ export class GroupsService {
     return result.length === 0 ? null : result[0]
   }
 
+  async updateGroupName(info: UpdateGroupNameInfo) {
+    const groupNameUpdate = `UPDATE chatGroups SET name = :name WHERE leader_id = :userId AND id = :groupId`
+    const result = await this.sequelize.query(groupNameUpdate, {
+      replacements: { ...info },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
+  }
+
   async updateGroupRemarks(info: UpdateGroupRemarksInfo) {
     const groupRemarksUpdate = `UPDATE user_group SET remarks = :remarks WHERE user_id = :userId AND group_id = :groupId`
     const result = await this.sequelize.query(groupRemarksUpdate, {
       replacements: {
         ...info,
       },
+      type: QueryTypes.UPDATE,
+    })
+    return !!result[1]
+  }
+
+  async updateGroupNotice(info: UpdateGroupNoticeInfo) {
+    const groupNoticeUpdate = `UPDATE chatGroups SET notice = :notice WHERE leader_id = :userId AND id = :groupId`
+    const result = await this.sequelize.query(groupNoticeUpdate, {
+      replacements: { ...info },
       type: QueryTypes.UPDATE,
     })
     return !!result[1]

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Sequelize } from 'sequelize-typescript'
 import { AddContactApplication, AddGroupApplication } from './interface/websocket.interface'
 import { QueryTypes } from 'sequelize'
+import { AddContactSuccess, EnterGroupSuccess, GroupsMembers } from './dto/websocket.dto'
 
 @Injectable()
 export class WebsocketService {
@@ -149,5 +150,58 @@ export class WebsocketService {
       }
     })
     return result
+  }
+
+  // 初始化群的成员id
+  async initGroupMemberIds(groups: GroupsMembers) {
+    const membersSelect = `SELECT group_id id, JSON_ARRAYAGG(user_id) memberIds FROM user_group GROUP BY group_id`
+    const result: any[] = await this.sequelize.query(membersSelect, {
+      type: QueryTypes.SELECT,
+    })
+    result.forEach((group) => {
+      groups[group.id] = group.memberIds
+    })
+  }
+
+  // 添加联系人成功，获取打招呼的联系记录
+  async initContactChatMessage(ids: AddContactSuccess) {
+    const chatMessageSelect = `
+      SELECT id, from_id fromId, to_id toId, type, message, url, createAt createTime
+      FROM friendChatMessages
+      WHERE from_id = :fromId AND to_id = :toId
+      ORDER BY createAt DESC
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const chatMessageSelectRes1 = await this.sequelize.query(chatMessageSelect, {
+        replacements: { fromId: ids.fromId, toId: ids.toId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const chatMessageSelectRes2 = await this.sequelize.query(chatMessageSelect, {
+        replacements: { fromId: ids.toId, toId: ids.fromId },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      return {
+        from: chatMessageSelectRes1[0],
+        to: chatMessageSelectRes2[0],
+      }
+    })
+    return result
+  }
+
+  // 进入群聊，获取打招呼的聊天消息
+  async initGroupChatMessage(ids: EnterGroupSuccess) {
+    const chatMessageSelect = `
+      SELECT id, group_id groupId, send_id fromId, type, message, url, createAt createTime
+      FROM groupChatMessages
+      WHERE group_id = :groupId AND send_id = :userId 
+      ORDER BY createAt DESC
+    `
+    const result = await this.sequelize.query(chatMessageSelect, {
+      replacements: { ...ids },
+      type: QueryTypes.SELECT,
+    })
+    return result[0]
   }
 }

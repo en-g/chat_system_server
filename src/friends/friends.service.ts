@@ -10,6 +10,7 @@ import {
   GetAllContactInfo,
   RefuseAddContactInfo,
   SearchFriendAndGroupsByKeyword,
+  SearchFriendsGroupsListInfo,
   UpdateFriendRemarksInfo,
 } from './interface/friends.interface'
 
@@ -277,6 +278,38 @@ export class FriendsService {
     const result = await this.sequelize.query(contactListSelect, {
       replacements: { ...ids },
       type: QueryTypes.SELECT,
+    })
+    return result
+  }
+
+  async searchFriendGroupsList(info: SearchFriendsGroupsListInfo) {
+    const friendsSelect = `
+      SELECT f.friend_id id, ui.nickname name, f.remarks, ui.avatar_url avatarUrl
+      FROM friends f
+      INNER JOIN userInfo ui ON ui.user_id = f.friend_id
+      WHERE f.user_id = :userId AND (ui.nickname LIKE CONCAT('%', :keyword, '%') OR f.remarks LIKE CONCAT('%', :keyword, '%'))
+    `
+    const groupsSelect = `
+      SELECT cg.id, cg.name, cg.avatar_url avatarUrl
+      FROM chatGroups cg
+      INNER JOIN user_group ug ON ug.group_id = cg.id
+      WHERE ug.user_id = :userId AND cg.name LIKE CONCAT('%', :keyword, '%')
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const friendsSelectRes = await this.sequelize.query(friendsSelect, {
+        replacements: { ...info },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      const groupsSelectRes = await this.sequelize.query(groupsSelect, {
+        replacements: { ...info },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      return {
+        contact: friendsSelectRes,
+        group: groupsSelectRes,
+      }
     })
     return result
   }

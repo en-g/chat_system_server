@@ -7,10 +7,22 @@ export interface GroupInfoIds {
   groupId: string
 }
 
+export interface UpdateGroupNameInfo {
+  userId: number
+  groupId: number
+  name: string
+}
+
 export interface UpdateGroupRemarksInfo {
   userId: number
   groupId: number
   remarks: string
+}
+
+export interface UpdateGroupNoticeInfo {
+  userId: number
+  groupId: number
+  notice: string
 }
 
 export interface AgreeAddGropId {
