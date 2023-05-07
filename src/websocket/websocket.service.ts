@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common'
 import { Sequelize } from 'sequelize-typescript'
 import { AddContactApplication, AddGroupApplication } from './interface/websocket.interface'
 import { QueryTypes } from 'sequelize'
-import { AddContactSuccess, EnterGroupSuccess, GroupsMembers } from './dto/websocket.dto'
+import {
+  AddContactSuccess,
+  DeleteChatMessageItemNotice,
+  DeleteChatMessageItemNoticeId,
+  EnterGroupSuccess,
+  GroupsMembers,
+} from './dto/websocket.dto'
 
 @Injectable()
 export class WebsocketService {
@@ -203,5 +209,35 @@ export class WebsocketService {
       type: QueryTypes.SELECT,
     })
     return result[0]
+  }
+
+  // 保存删除聊天项的通知
+  async saveDeleteChatMesageItemNotice(info: DeleteChatMessageItemNotice) {
+    const chatMessageItemInser = `INSERT INTO deleteChatMessageItemNotice (user_id, chat_id, type) VALUES (:userId, :chatId, :type)`
+    const result = await this.sequelize.query(chatMessageItemInser, {
+      replacements: { ...info },
+      type: QueryTypes.INSERT,
+    })
+    return !!result[1]
+  }
+
+  // 获取要删除的聊天列表项
+  async getDeleteChatMesageItemNotice(id: DeleteChatMessageItemNoticeId) {
+    const chatMessageItemSelect = `SELECT id, chat_id chatId, type FROM deleteChatMessageItemNotice WHERE user_id = :userId`
+    const chatMessageItemDelete = `DELETE FROM deleteChatMessageItemNotice WHERE user_id = :userId`
+    const result = await this.sequelize.transaction(async (t) => {
+      const chatMessageItemSelectRes = await this.sequelize.query(chatMessageItemSelect, {
+        replacements: { ...id },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      await this.sequelize.query(chatMessageItemDelete, {
+        replacements: { ...id },
+        type: QueryTypes.DELETE,
+        transaction: t,
+      })
+      return chatMessageItemSelectRes
+    })
+    return result
   }
 }

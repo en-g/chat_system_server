@@ -43,6 +43,12 @@ export class WebsocketGateway {
     const offlineChatMessages = await this.websocketService.getOfflineChatMessage(id.userId)
     client.emit('offlineChatMessages', offlineChatMessages)
 
+    // 通知用户删除聊天列表项
+    const deleteChatMessageList = await this.websocketService.getDeleteChatMesageItemNotice({ userId: id.userId })
+    deleteChatMessageList.forEach((item: any) => {
+      client.emit('deleteChatMessageItem', { id: item.chatId, type: item.type })
+    })
+
     // 客户端断开连接
     client.on('disconnect', async () => {
       Reflect.deleteProperty(this.clients, client.id)
@@ -51,8 +57,6 @@ export class WebsocketGateway {
       // 更新最后在线时间
       await this.websocketService.updateUserLatestOnlineTime(id.userId)
     })
-
-    // this.heartbeatToClient()
   }
 
   // 初始化群的成员id
@@ -98,9 +102,24 @@ export class WebsocketGateway {
     // 通知双方删除聊天列表项
     const fromClient = Object.values(this.clients).find((client) => client.userId === info.userId)
     const toClient = Object.values(this.clients).find((client) => client.userId === info.friendId)
-    fromClient && fromClient.socket.emit('deleteChatMessageItem', { id: info.friendId, type: 'friend' })
-    toClient && toClient.socket.emit('deleteChatMessageItem', { id: info.userId, type: 'friend' })
-    // Todo 这里只通知在线的，那不在线的呢，所以需要保存
+    if (fromClient) {
+      fromClient.socket.emit('deleteChatMessageItem', { id: info.friendId, type: 'friend' })
+    } else {
+      await this.websocketService.saveDeleteChatMesageItemNotice({
+        userId: info.userId,
+        chatId: info.friendId,
+        type: 'friend',
+      })
+    }
+    if (toClient) {
+      toClient.socket.emit('deleteChatMessageItem', { id: info.userId, type: 'friend' })
+    } else {
+      await this.websocketService.saveDeleteChatMesageItemNotice({
+        userId: info.friendId,
+        chatId: info.userId,
+        type: 'friend',
+      })
+    }
   }
 
   // 添加群聊
@@ -185,7 +204,15 @@ export class WebsocketGateway {
     }
     // 通知退群的用户删除聊天列表项
     const client = Object.values(this.clients).find((client) => client.userId === info.fromId)
-    client && client.socket.emit('deleteChatMessageItem', { id: info.groupId, type: 'group' })
+    if (client) {
+      client.socket.emit('deleteChatMessageItem', { id: info.groupId, type: 'group' })
+    } else {
+      await this.websocketService.saveDeleteChatMesageItemNotice({
+        userId: info.fromId,
+        chatId: info.groupId,
+        type: 'group',
+      })
+    }
   }
 
   // 解散群聊
@@ -195,8 +222,15 @@ export class WebsocketGateway {
       this.groups[info.groupId].forEach(async (id: number) => {
         // 通知所有群成员删除聊天列表项
         const client = Object.values(this.clients).find((client) => client.userId === id)
-        client && client.socket.emit('deleteChatMessageItem', { id: info.groupId, type: 'group' })
-        // TODO 依然要保存不在线的
+        if (client) {
+          client.socket.emit('deleteChatMessageItem', { id: info.groupId, type: 'group' })
+        } else {
+          await this.websocketService.saveDeleteChatMesageItemNotice({
+            userId: id,
+            chatId: info.groupId,
+            type: 'group',
+          })
+        }
         if (id === info.fromId) return
         const res = await this.websocketService.setGroupNotice({
           fromId: info.fromId,

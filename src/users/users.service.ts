@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { PersonalInfo, PersonalInfoId, UserLogin } from './interface/users.interface'
+import { encryptPassword } from 'src/utils/encrypt'
 
 @Injectable()
 export class UsersService {
@@ -11,7 +12,8 @@ export class UsersService {
   async searchUser(info: UserLogin) {
     const userSelect = `SELECT id, username, password, email FROM users WHERE (username = :username OR email = :username) AND password = :password`
     const result = await this.sequelize.query(userSelect, {
-      replacements: { ...info },
+      replacements: { username: info.username, password: encryptPassword(info.password) },
+      // replacements: { ...info },
       type: QueryTypes.SELECT,
     })
     return result[0]

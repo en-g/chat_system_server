@@ -56,6 +56,16 @@ export interface EnterGroupSuccess {
   groupId: number
 }
 
+export interface DeleteChatMessageItemNotice {
+  userId: number
+  chatId: number
+  type: string
+}
+
+export interface DeleteChatMessageItemNoticeId {
+  userId: number
+}
+
 export class DeleteContactApplication {
   @IsNotEmpty()
   @IsNumber()

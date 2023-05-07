@@ -1,17 +1,13 @@
-import { createCipheriv, randomBytes, scrypt } from 'crypto'
-import { promisify } from 'util'
+import { createCipheriv } from 'crypto'
 
-const iv = randomBytes(16)
-const password = 'chat_system'
-
-const getBuffer = async () => {
-  const key = (await promisify(scrypt)(password, 'salt', 32)) as Buffer
-  const cipher = createCipheriv('aes-256-ctr', key, iv)
-
-  const textToEncrypt = 'Nest'
-
-  const encryptedText = Buffer.concat([cipher.update(textToEncrypt), cipher.final()])
-  return encryptedText.toString('utf-8')
+const encryptPassword = (password: string) => {
+  const algorithm = process.env.ENCRYPT_ALGORITHM
+  const secretKey = process.env.ENCRYPT_SECRETKEY
+  const iv = process.env.ENCRYPT_IV
+  const cipher = createCipheriv(algorithm, secretKey, iv)
+  let encryptedText = cipher.update(password, 'utf8', 'hex')
+  encryptedText += cipher.final('hex')
+  return encryptedText
 }
 
-export { getBuffer }
+export { encryptPassword }
