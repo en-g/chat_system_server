@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common'
 import { EmotionList, UploadEmotion } from './dto/emotion.dto'
 import { EmotionService } from './emotion.service'
+import { AuthGuard } from '@nestjs/passport'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('emotion')
 export class EmotionController {
   constructor(private readonly emotionService: EmotionService) {}

@@ -21,10 +21,10 @@ class Email {
 
   sendUpdatePassCode(email: string, username: string, code: string) {
     const emialInfo = {
-      from: `"【聊一聊】👻"<${this.user}>`,
+      from: `"【去玩】👻"<${this.user}>`,
       to: email,
-      subject: '聊一聊',
-      text: `【聊一聊】您正在【修改账号${username}的密码】, 验证码为${code}。提供给他人可能导致账号被盗, 若非本人操作, 请忽视此条邮件。`,
+      subject: '验证码',
+      text: `【去玩】您正在【修改账号${username}的密码】, 验证码为${code}。提供给他人可能导致账号被盗, 若非本人操作, 请忽视此条邮件。`,
     }
     return new Promise((resolve, reject) => {
       this.transporter.sendMail(emialInfo, (err: any) => {
@@ -39,10 +39,10 @@ class Email {
 
   sendUserRegisterCode(email: string, username: string, code: string) {
     const emialInfo = {
-      from: `"【聊一聊】👻"<${this.user}>`,
+      from: `"【去玩】👻"<${this.user}>`,
       to: email,
-      subject: '聊一聊',
-      text: `【聊一聊】您正在【注册账号${username}】, 验证码为${code}。感谢您使用"聊一聊"聊天系统, 若非本人操作, 请忽视此条邮件。`,
+      subject: '验证码',
+      text: `【去玩】您正在【注册账号${username}】, 验证码为${code}。感谢您使用"去玩"聊天系统, 若非本人操作, 请忽视此条邮件。`,
     }
     return new Promise((resolve, reject) => {
       this.transporter.sendMail(emialInfo, (err: any) => {

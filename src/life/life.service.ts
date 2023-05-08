@@ -29,7 +29,7 @@ export class LifeService {
   async getNewLifeTidingsList(info: GetNewLifeTidingsListId) {
     const newTidingsListSelect = `
       SELECT lt.id, lt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl, lt.title, lt.content, 
-        lt.createAt createTime, ltif.pictures, 
+        lt.createAt createTime, IFNULL(ltif.pictures, JSON_ARRAY()) pictures, 
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
@@ -121,7 +121,7 @@ export class LifeService {
   async getHotLifeTidingsList(info: GetNewLifeTidingsListId) {
     const newTidingsListSelect = `
       SELECT lt.id, lt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl, lt.title, lt.content, 
-        lt.createAt createTime, ltif.pictures, 
+        lt.createAt createTime, IFNULL(ltif.pictures, JSON_ARRAY()) pictures, 
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,
@@ -216,7 +216,7 @@ export class LifeService {
   async getUserLifeTidingsList(id: GetUserLifeTidingsListId, info: GetUserLifeTidingsListInfo) {
     const tidingsList = `
       SELECT lt.id, lt.user_id userId, ui.nickname name, ui.avatar_url avatarUrl, lt.title, lt.content, 
-        lt.createAt createTime, ltif.pictures, 
+        lt.createAt createTime, IFNULL(ltif.pictures, JSON_ARRAY()) pictures, 
         IFNULL(lttuu.isThumbsUp, 0) isThumbsUp, 
         IFNULL(lcc.isCollect, 0) isCollect, 
         IFNULL(ltuuu.thumbsUpCount, 0) thumbsUpCount,

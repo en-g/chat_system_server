@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Param, Delete } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Param, Delete, UseGuards } from '@nestjs/common'
 import {
   CollectLifeTidingsIds,
   CommentLifeTidingsInfo,
@@ -20,7 +20,9 @@ import {
   ThumbsUpLifeTidingsIds,
 } from './dto/life.dto'
 import { LifeService } from './life.service'
+import { AuthGuard } from '@nestjs/passport'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('life')
 export class LifeController {
   constructor(private readonly lifeService: LifeService) {}

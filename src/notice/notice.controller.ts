@@ -1,7 +1,9 @@
-import { Controller, Get, Query, Put, Body } from '@nestjs/common'
+import { Controller, Get, Query, Put, Body, UseGuards } from '@nestjs/common'
 import { NoticeService } from './notice.service'
 import { ContactNoticeListInfo, GroupNoticeListInfo, ReadNoticeId, UnHandleNoticeInfo } from './dto/notice.dto'
+import { AuthGuard } from '@nestjs/passport'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('notice')
 export class NoticeController {
   constructor(private readonly noticeService: NoticeService) {}

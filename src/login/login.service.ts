@@ -35,7 +35,7 @@ export class LoginService {
       },
       type: QueryTypes.SELECT,
     })
-    if (!verificationCodeSelectRes.length) {
+    if (verificationCodeSelectRes.length === 0) {
       // 验证码错误
       return {
         status: 2,
@@ -49,7 +49,8 @@ export class LoginService {
       }
     }
     const passwordUpdateRes = await this.sequelize.query(passwordUpdate, {
-      replacements: { ...passInfo },
+      replacements: { username: passInfo.username, newPass: encryptPassword(passInfo.newPass), email: passInfo.email },
+      // replacements: { ...passInfo },
       type: QueryTypes.UPDATE,
     })
     await this.sequelize.query(verificationCodeDelete, {

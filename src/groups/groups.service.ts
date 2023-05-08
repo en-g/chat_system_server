@@ -76,7 +76,7 @@ export class GroupsService {
         ug.disturb,
         cg.createAt createTime,
         cg.leader_id leaderId,
-        cg.leader_id = 1 isLeader,
+        cg.leader_id = :userId isLeader,
         ugui.members
       FROM chatGroups cg
       INNER JOIN user_group ug ON ug.group_id = cg.id

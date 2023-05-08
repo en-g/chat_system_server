@@ -1,7 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Post, UseGuards } from '@nestjs/common'
 import { MessageService } from './message.service'
 import { ContactChatMessageInfo, GroupChatMessageInfo } from './dto/message.dto'
+import { AuthGuard } from '@nestjs/passport'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
