@@ -76,33 +76,39 @@ export class GroupsService {
         ug.disturb,
         cg.createAt createTime,
         cg.leader_id leaderId,
-        cg.leader_id = :userId isLeader,
-        ugui.members
+        cg.leader_id = :userId isLeader
       FROM chatGroups cg
       INNER JOIN user_group ug ON ug.group_id = cg.id
       INNER JOIN userInfo ui ON ui.user_id = cg.leader_id
-      INNER JOIN (
-        SELECT ug.group_id, JSON_ARRAYAGG(
-          JSON_OBJECT(
-            'id', ui.user_id, 
-            'nickname', ui.nickname, 
-            'avatarUrl', ui.avatar_url, 
-            'remarks', ug.remarks
-          )
-        ) members
-        FROM user_group ug
-        INNER JOIN userInfo ui ON ui.user_id = ug.user_id
-        GROUP BY ug.group_id
-      ) ugui ON ugui.group_id = cg.id
       WHERE ug.group_id = :groupId AND ug.user_id = :userId
     `
-    const result = await this.sequelize.query(groupInfoSelect, {
-      replacements: {
-        ...ids,
-      },
-      type: QueryTypes.SELECT,
+    const membersSelect = `
+      SELECT ui.user_id id, ui.nickname, ui.avatar_url avatarUrl, ug.remarks
+      FROM user_group ug
+      INNER JOIN userInfo ui ON ui.user_id = ug.user_id
+      WHERE ug.group_id = :groupId
+      ORDER BY ug.createAt
+    `
+    const result = await this.sequelize.transaction(async (t) => {
+      const groupInfoSelectRes = await this.sequelize.query(groupInfoSelect, {
+        replacements: {
+          ...ids,
+        },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      if (groupInfoSelectRes.length === 0) return null
+      const membersSelectRes = await this.sequelize.query(membersSelect, {
+        replacements: {
+          ...ids,
+        },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      })
+      groupInfoSelectRes[0]['members'] = membersSelectRes
+      return groupInfoSelectRes[0]
     })
-    return result.length === 0 ? null : result[0]
+    return result
   }
 
   async updateGroupName(info: UpdateGroupNameInfo) {

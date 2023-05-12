@@ -18,7 +18,7 @@ async function bootstrap() {
   app.useGlobalPipes(new GeneralValidatePipe())
   // 全局请求响应拦截器
   app.useGlobalInterceptors(new HttpResponseInterceptor())
-  app.listen(3000).then(() => {
+  app.listen(3003).then(() => {
     console.log('Server connection succeeded...')
   })
 }

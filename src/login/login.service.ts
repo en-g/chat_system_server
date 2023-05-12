@@ -192,7 +192,7 @@ export class LoginService {
         },
         type: QueryTypes.DELETE,
       })
-      return !result[1]
+      return !!result[1]
     }
     return !!result[1]
   }

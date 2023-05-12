@@ -22,7 +22,7 @@ import {
 import { WebsocketService } from './websocket.service'
 import { MessageService } from '../message/message.service'
 
-@WebSocketGateway(3002, { cors: true })
+@WebSocketGateway(3004, { cors: true })
 export class WebsocketGateway {
   clients: Clients = {}
   groups: GroupsMembers = {}

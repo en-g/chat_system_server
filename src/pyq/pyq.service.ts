@@ -60,10 +60,26 @@ export class PyqService {
       FROM pyqComments pc
       INNER JOIN userInfo ui ON ui.user_id = pc.user_id
       LEFT JOIN userInfo uii ON uii.user_id = pc.to_id
-      WHERE (pc.user_id = :userId OR pc.user_id IN (
-        SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
-      )) AND pc.pyqTidings_id = :pyqTidingsId
+      WHERE (
+        pc.user_id = :userId OR pc.user_id IN (
+          SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
+        )
+      ) AND pc.pyqTidings_id = :pyqTidingsId
 			ORDER BY pc.createAt
+    `
+    const commentSelectNot = `
+      SELECT pc.id, pc.user_id userId, pc.to_id toId, ui.nickname fromName, uii.nickname toName, pc.content
+      FROM pyqComments pc
+      INNER JOIN userInfo ui ON ui.user_id = pc.user_id
+      LEFT JOIN userInfo uii ON uii.user_id = pc.to_id
+      WHERE (
+        pc.user_id IN (
+          SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
+        ) AND pc.to_id NOT IN (
+          SELECT f.friend_id FROM friends f WHERE f.user_id = :userId
+        )
+      ) AND pc.pyqTidings_id = :pyqTidingsId
+      ORDER BY pc.createAt
     `
     const result = await this.sequelize.transaction(async (t) => {
       const pyqTidingsListSelectRes: any[] = await this.sequelize.query(pyqTidingsListSelect, {
@@ -72,10 +88,19 @@ export class PyqService {
         transaction: t,
       })
       for (const tiding of pyqTidingsListSelectRes) {
-        const commentSelectRes = await this.sequelize.query(commentSelect, {
+        const commentSelectRes: any[] = await this.sequelize.query(commentSelect, {
           replacements: { userId: id.userId, pyqTidingsId: tiding.id },
           type: QueryTypes.SELECT,
           transaction: t,
+        })
+        const commentSelectNotRes = await this.sequelize.query(commentSelectNot, {
+          replacements: { userId: id.userId, pyqTidingsId: tiding.id },
+          type: QueryTypes.SELECT,
+          transaction: t,
+        })
+        commentSelectNotRes.forEach((comment: any) => {
+          const index = commentSelectRes.findIndex((item) => item.id === comment.id)
+          index !== -1 && commentSelectRes.splice(index, 1)
         })
         tiding['comments'] = commentSelectRes
       }
